@@ -1,9 +1,9 @@
 import os
 from supabase import create_client, Client
 
-# NOTA: Usen variables de entorno o peguen sus claves aquí temporalmente como en el ejemplo del profe
-URL = "https://imczvsvomogmsdbmslkx.supabase.co"
-KEY = "sb_publishable_72CaSyw9UpDJA8yccCPTCw_D9dFhjP5"
+# CONSTANTES
+URL = "https://lvcrigxkcyyeqbqfgruo.supabase.co"
+KEY = "sb_publishable_AghBIqMcP2jEpnT2DiGYUA_2U2dLRy3"
 
 class DBManager:
     def __init__(self):
