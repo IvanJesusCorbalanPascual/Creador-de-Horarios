@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>966</width>
-    <height>681</height>
+    <width>830</width>
+    <height>671</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,10 +43,24 @@
         <number>20</number>
        </property>
        <item>
-        <widget class="QComboBox" name="combo_ciclos"/>
+        <widget class="QComboBox" name="combo_ciclos">
+         <property name="styleSheet">
+          <string notr="true">color:white;</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>DAM1</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>DAM2</string>
+          </property>
+         </item>
+        </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="Horarios">
          <property name="font">
           <font>
            <pointsize>16</pointsize>
@@ -144,6 +158,31 @@ color:lightgrey;</string>
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit">
+         <property name="styleSheet">
+          <string notr="true">background-color:white;</string>
+         </property>
+         <property name="placeholderText">
+          <string>Nombre del ciclo...</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_agregar_ciclo">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">color:white;</string>
+         </property>
+         <property name="text">
+          <string>Agregar un Ciclo</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -159,198 +198,361 @@ color:lightgrey;</string>
           <number>2</number>
          </property>
          <widget class="QWidget" name="page_profesores">
-          <widget class="QTableWidget" name="tabla_profesores">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>60</y>
-             <width>431</width>
-             <height>441</height>
-            </rect>
-           </property>
-           <row>
-            <property name="text">
-             <string>1</string>
-            </property>
-           </row>
-           <row>
-            <property name="text">
-             <string>2</string>
-            </property>
-           </row>
-           <column>
-            <property name="text">
-             <string>Nombre</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Ciclos</string>
-            </property>
-           </column>
-          </widget>
-          <widget class="QWidget" name="horizontalLayoutWidget">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>30</y>
-             <width>432</width>
-             <height>25</height>
-            </rect>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item>
-             <widget class="QPushButton" name="btn_agregar_profe">
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Tabla de Profesores</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_ciclo_profesor">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>DAM / DAW /...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <property name="spacing">
+              <number>7</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="btn_agregar_profe">
+               <property name="text">
+                <string>Agregar Profesor</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_editar_profe">
+               <property name="text">
+                <string>Editar Profesor</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_borrar_profe">
+               <property name="text">
+                <string>Borrar Profesor</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tabla_profesores">
+             <row>
               <property name="text">
-               <string>Agregar Profesor</string>
+               <string>1</string>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btn_editar_profe">
+             </row>
+             <row>
               <property name="text">
-               <string>Editar Profesor</string>
+               <string>2</string>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btn_borrar_profe">
+             </row>
+             <column>
               <property name="text">
-               <string>Borrar Profesor</string>
+               <string>Nombre</string>
               </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
+             </column>
+             <column>
+              <property name="text">
+               <string>Ciclos</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Modulos</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Horas semanales</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Horas Diarias</string>
+              </property>
+             </column>
+             <item row="0" column="0">
+              <property name="text">
+               <string>Pepe</string>
+              </property>
+             </item>
+             <item row="0" column="1">
+              <property name="text">
+               <string>DAM,DAW,ASIR</string>
+              </property>
+             </item>
+             <item row="0" column="2">
+              <property name="text">
+               <string>Acceso a datos, Diseño de Interfaces, PSP</string>
+              </property>
+             </item>
+             <item row="0" column="3">
+              <property name="text">
+               <string>20</string>
+              </property>
+             </item>
+             <item row="0" column="4">
+              <property name="text">
+               <string>4</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
          </widget>
          <widget class="QWidget" name="page_modulos">
-          <widget class="QLabel" name="label_2">
-           <property name="geometry">
-            <rect>
-             <x>140</x>
-             <y>40</y>
-             <width>171</width>
-             <height>16</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Modulos del ciclo seleccionado</string>
-           </property>
-          </widget>
-          <widget class="QTableWidget" name="tabla_modulos">
-           <property name="geometry">
-            <rect>
-             <x>-10</x>
-             <y>90</y>
-             <width>451</width>
-             <height>441</height>
-            </rect>
-           </property>
-           <row>
-            <property name="text">
-             <string>1</string>
-            </property>
-           </row>
-           <column>
-            <property name="text">
-             <string>Nombre</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Horas Semanales</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Horas Diarias</string>
-            </property>
-           </column>
-          </widget>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Modulos de</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_ciclo_modulo">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>DAM / DAW /...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QPushButton" name="btn_agregar_modulo">
+               <property name="text">
+                <string>Agregar Modulo</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_editar_modulo">
+               <property name="text">
+                <string>Editar Modulo</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="btn_eliminar_modulo">
+               <property name="text">
+                <string>Eliminar Modulo</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tabla_modulos">
+             <row>
+              <property name="text">
+               <string>1</string>
+              </property>
+             </row>
+             <column>
+              <property name="text">
+               <string>Nombre</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Horas Semanales</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Horas Diarias</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Profesor Asignado</string>
+              </property>
+             </column>
+            </widget>
+           </item>
+          </layout>
          </widget>
          <widget class="QWidget" name="page_horarios">
-          <widget class="QTableWidget" name="tabl_horario_grid">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>80</y>
-             <width>721</width>
-             <height>521</height>
-            </rect>
-           </property>
-           <property name="selectionMode">
-            <enum>QAbstractItemView::SingleSelection</enum>
-           </property>
-           <row>
-            <property name="text">
-             <string>Nueva fila</string>
-            </property>
-           </row>
-           <row>
-            <property name="text">
-             <string>8:00</string>
-            </property>
-           </row>
-           <row>
-            <property name="text">
-             <string>10:00</string>
-            </property>
-           </row>
-           <column>
-            <property name="text">
-             <string>Lunes</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>MArtes</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Martes</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Miercoles</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>Viernes</string>
-            </property>
-           </column>
-          </widget>
-          <widget class="QLabel" name="label_3">
-           <property name="geometry">
-            <rect>
-             <x>40</x>
-             <y>50</y>
-             <width>81</width>
-             <height>16</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>Horario de...</string>
-           </property>
-          </widget>
-          <widget class="QLabel" name="label_4">
-           <property name="geometry">
-            <rect>
-             <x>130</x>
-             <y>50</y>
-             <width>81</width>
-             <height>16</height>
-            </rect>
-           </property>
-           <property name="text">
-            <string>DAM1 / DAM2/...</string>
-           </property>
-          </widget>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="label_3">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Horario de</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_ciclo_horario">
+               <property name="font">
+                <font>
+                 <pointsize>12</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>DAM1 / DAM2/...</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="tabl_horario_grid">
+             <property name="dragEnabled">
+              <bool>true</bool>
+             </property>
+             <property name="dragDropMode">
+              <enum>QAbstractItemView::DragDrop</enum>
+             </property>
+             <property name="selectionMode">
+              <enum>QAbstractItemView::SingleSelection</enum>
+             </property>
+             <row>
+              <property name="text">
+               <string>8:00</string>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string>9:00</string>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string>10:00</string>
+              </property>
+             </row>
+             <column>
+              <property name="text">
+               <string>Lunes</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Martes</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Martes</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Miercoles</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Viernes</string>
+              </property>
+             </column>
+             <item row="0" column="0">
+              <property name="text">
+               <string>Acceso a datos</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </widget>
        </item>
@@ -364,8 +566,8 @@ color:lightgrey;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>966</width>
-     <height>21</height>
+     <width>830</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>

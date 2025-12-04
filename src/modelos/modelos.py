@@ -1,4 +1,5 @@
 # Constantes de prioridad
+PRIORIDAD_NO = 0 # Normal, el profesor puede
 PRIORIDAD_CRITICA = 1 # Rojo, el profesor no pupede
 PRIORIDAD_PREFERENCIA = 2 # Amarillo, el profesor prefiere que no
 
