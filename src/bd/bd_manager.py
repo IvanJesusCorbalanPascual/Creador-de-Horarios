@@ -144,6 +144,25 @@ class DBManager:
             print(f"Error al crear el modulo: {e}")
             return None
 
+    def actualizar_modulo(self, id_modulo: int, datos: dict):
+        try:
+            # Remove id from datos if present to avoid changing PK
+            if 'id' in datos:
+                del datos['id']
+            res = self.client.table("modulos").update(datos).eq("id", id_modulo).execute()
+            return res.data
+        except Exception as e:
+            print(f"Error al actualizar el modulo: {e}")
+            return None
+
+    def eliminar_modulo(self, id_modulo: int):
+        try:
+            res = self.client.table("modulos").delete().eq("id", id_modulo).execute()
+            return res.data
+        except Exception as e:
+            print(f"Error al eliminar el modulo: {e}")
+            return None
+
     # --- COMPETENCIA ---
     def asignar_competencia(self, profesor_id: int, modulo_id: int):
         # Asigna un modulo a un profesor

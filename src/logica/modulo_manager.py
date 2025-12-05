@@ -27,7 +27,7 @@ class ModuloManager:
                     tabla_widget.setItem(fila_idx, 3, QTableWidgetItem(str(modulo['horas_max_dia'])))
 
             tabla_widget.setColumnHidden(0,True)
-            tabla_widget.resizeContentsToColumns()
+            tabla_widget.resizeColumnsToContents()
 
         else:
             print("No se encontraron módulos para este cilo")
@@ -39,10 +39,21 @@ class ModuloManager:
         return False
     
     def editar_modulo(self, id_modulo, datos):
-        datos['id'] = id_modulo
-        if self.bd.crear_modulo(datos):
+        # datos['id'] = id_modulo # No necesitamos meter el ID en datos si pasamos id_modulo separado
+        if self.bd.actualizar_modulo(id_modulo, datos):
             return True
         return False
     
-    def eliminar_modulo(self, id_modulo):
-        pass
+    def eliminar_modulo(self, tabla_widget):
+        fila = tabla_widget.currentRow()
+        if fila < 0:
+            return False
+            
+        id_item = tabla_widget.item(fila, 0)
+        if not id_item:
+            return False
+            
+        id_modulo = id_item.text()
+        if self.bd.eliminar_modulo(id_modulo):
+            return True
+        return False

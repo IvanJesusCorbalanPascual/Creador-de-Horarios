@@ -68,21 +68,46 @@ class DialogoProfesor(QDialog):
         else:
             QMessageBox.critical(self, "Error de DB", "Fallo al guardar en la base de datos")
 
+class DialogoModulo(QDialog):
+    """Ventana para Crear/Editar Módulos"""
+    def __init__(self, parent=None, datos_modulo=None, ciclo_id=None):
+        super().__init__(parent)
+        # Carga el archivo UI que diseñes para módulos
+        uic.loadUi(os.path.join("src", "ui", "modulo_form.ui"), self)
+        
+        self.datos_modulo = datos_modulo
+        self.ciclo_id = ciclo_id
+        self.setWindowTitle("Editar Módulo" if datos_modulo else "Agregar Módulo")
+
+        # Pre-llenar datos si estamos editando
+        if self.datos_modulo:
+            self.le_nombre.setText(str(self.datos_modulo['nombre']))
+            self.sb_horas_max_semana.setValue(int(self.datos_modulo['horas_semanales']))
+            self.sb_horas_max_dia.setValue(int(self.datos_modulo['horas_max_dia']))
+
+    def obtener_datos(self):
+        """Devuelve un diccionario con lo que escribió el usuario"""
+        return {
+            "nombre": self.le_nombre.text().strip(),
+            "horas_semanales": self.sb_horas_max_semana.value(),
+            "horas_max_dia": self.sb_horas_max_dia.value(),
+            "ciclo_id": self.ciclo_id # Importante: asignamos el módulo al ciclo actual
+        }
 # --- Ventana Principal ---
 class MiAplicacion(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        # Inicializamos la base de datos
         self.db = db
-
         self.modulo_manager = ModuloManager(self.db)
         
-        # Cargando la vista de horarios
+        # Cargando la vista principal
         uic.loadUi("src/ui/horarios.ui", self) 
         self.profesor_manager = ProfesorManager(DB_CONFIG)
         self.cargar_ciclos_db() # Cargar ciclos al inicio
         self.configuracion_menu()
-        self.cambiar_pagina(0) # Pagina por defecto al abrir la apliacion
+        self.cambiar_pagina(0) # Pagina por defecto (profesores) al abrir la apliacion
 
     def configuracion_menu(self):
         # Mapeo de Botones
@@ -94,7 +119,11 @@ class MiAplicacion(QMainWindow):
         self.btn_agregar_profe.clicked.connect(self.agregar_profesor)
         self.btn_editar_profe.clicked.connect(self.editar_profesor)
         self.btn_borrar_profe.clicked.connect(self.borrar_profesor)
-        
+
+        # Conexiones de botones de Profesores
+        self.btn_agregar_modulo.clicked.connect(self.agregar_modulo)
+        self.btn_editar_modulo.clicked.connect(self.editar_modulo)
+        self.btn_eliminar_modulo.clicked.connect(self.borrar_modulo)
         
         # Al cambiar de Ciclo, recarga la pagina
         self.combo_ciclos.currentIndexChanged.connect(self.cambiar_ciclo)
@@ -115,21 +144,6 @@ class MiAplicacion(QMainWindow):
         indice_actual = self.stackedWidget.currentIndex()
         self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
 
-    """
-    def cargar_ciclo(self):
-        lista_ciclos = self.db.obtener_ciclos()
-
-        self.combo_ciclos.clear()
-        if lista_ciclos:
-            for ciclo in lista_ciclos:
-                self.combo_ciclos.addItem(ciclo['nombre'])
-
-        try:
-            self.combo_ciclos.currentTextChanged.disconnect()
-        except:
-            pass
-        self.combo_ciclos.currentTextChanged.connect(self.cambiar_ciclo)
-    """
     def cargar_ciclos_db(self):
         """Carga los ciclos desde la base de datos al ComboBox"""
         ciclos = db.obtener_ciclos()
@@ -185,19 +199,18 @@ class MiAplicacion(QMainWindow):
             self.tabla_profesores.resizeColumnsToContents()
 
     def agregar_profesor(self):
-        """Abre el dialogo para agregar un profesor"""
+        # Abre el dialogo para agregar un profesor
         dialogo = DialogoProfesor(self)
         if dialogo.exec_() == QDialog.Accepted:
             self.cargar_profesores() # Recargar la tabla tras el exito
 
     def editar_profesor(self):
-        """Abre el dialogo para editar el profesor seleccionado"""
+        # Abre el dialogo para editar el profesor seleccionado
         seleccion = self.tabla_profesores.currentRow()
         if seleccion >= 0:
-            # Obtener el ID de la primera columna (UserRole)
+            # Obtener el ID de la primera columna
             profesor_id = self.tabla_profesores.item(seleccion, 0).data(Qt.UserRole)
             # Buscar el objeto profesor por ID en la lista cargada
-            
             profesores = self.profesor_manager.get_all_profesores()
             profesor_a_editar = next((p for p in profesores if p.id == profesor_id), None)
             
@@ -209,7 +222,7 @@ class MiAplicacion(QMainWindow):
             QMessageBox.warning(self, "Advertencia", "Selecciona un profesor para editar")
 
     def borrar_profesor(self):
-        """Borra el profesor seleccionado"""
+        # Borra el profesor seleccionado
         seleccion = self.tabla_profesores.currentRow()
         if seleccion >= 0:
             profesor_id = self.tabla_profesores.item(seleccion, 0).data(Qt.UserRole)
@@ -226,6 +239,90 @@ class MiAplicacion(QMainWindow):
                     QMessageBox.critical(self, "Error de DB", "Fallo al borrar el profesor")
         else:
             QMessageBox.warning(self, "Advertencia", "Selecciona un profesor para borrar")
+
+    def agregar_modulo(self):
+        # 1. Obtenemos el ID del ciclo que se está viendo actualmente
+        ciclo_id = self.combo_ciclos.currentData()
+        
+        if not ciclo_id:
+            QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido primero.")
+            return
+
+        # 2. Abrimos el diálogo pasándole el ciclo_id
+        dialogo = DialogoModulo(self, ciclo_id=ciclo_id)
+        
+        if dialogo.exec_() == QDialog.Accepted:
+            datos = dialogo.obtener_datos()
+            
+            # Manejo de errores
+            if not datos['nombre']:
+                QMessageBox.warning(self, "Error", "Por favor, escribe el nombre del módulo")
+                return
+
+            # 3. Guardamos usando el manager
+            if self.modulo_manager.agregar_modulo(datos):
+                self.cargar_modulos() # Refrescar la tabla
+            else:
+                QMessageBox.critical(self, "Error", "No se pudo guardar el módulo.")
+
+    def editar_modulo(self):
+        """Edita el módulo seleccionado en la tabla"""
+        # 1. Comprobar selección
+        fila = self.tabla_modulos.currentRow()
+        if fila < 0:
+            QMessageBox.warning(self, "Aviso", "Selecciona un módulo para editar")
+            return
+
+        # 2. Recuperar datos de la tabla para pre-llenar el formulario
+        # (Es más rápido que consultar a la BD otra vez)
+        id_modulo = self.tabla_modulos.item(fila, 0).text()
+        nombre = self.tabla_modulos.item(fila, 1).text()
+        h_sem = self.tabla_modulos.item(fila, 2).text()
+        h_dia = self.tabla_modulos.item(fila, 3).text()
+        
+        # Empaquetamos en un dict temporal
+        datos_actuales = {
+            'nombre': nombre,
+            'horas_semanales': h_sem,
+            'horas_max_dia': h_dia
+        }
+        
+        # Recuperamos ciclo_id por si acaso (aunque al editar no solemos cambiarlo de ciclo aquí)
+        ciclo_id = self.combo_ciclos.currentData()
+
+        # 3. Abrir diálogo
+        dialogo = DialogoModulo(self, datos_modulo=datos_actuales, ciclo_id=ciclo_id)
+        
+        if dialogo.exec_() == QDialog.Accepted:
+            nuevos_datos = dialogo.obtener_datos()
+            
+            # 4. Actualizar
+            if self.modulo_manager.editar_modulo(id_modulo, nuevos_datos):
+                self.cargar_modulos()
+            else:
+                QMessageBox.critical(self, "Error", "Fallo al actualizar el módulo")
+
+    def borrar_modulo(self):
+        """Elimina el módulo seleccionado"""
+        fila = self.tabla_modulos.currentRow()
+        if fila < 0:
+            QMessageBox.warning(self, "Aviso", "Selecciona un módulo para borrar")
+            return
+            
+        nombre = self.tabla_modulos.item(fila, 1).text()
+        
+        confirmacion = QMessageBox.question(
+            self, "Borrar Módulo", 
+            f"¿Estás seguro de borrar el módulo '{nombre}'?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        
+        if confirmacion == QMessageBox.Yes:
+            # Pasamos la tabla entera al manager, él sabe buscar el ID y borrar
+            if self.modulo_manager.eliminar_modulo(self.tabla_modulos):
+                self.cargar_modulos()
+            else:
+                QMessageBox.critical(self, "Error", "No se pudo borrar el módulo")
 
     def cambiar_ciclo(self): # Funcion anadida segun tu peticion
         ciclo_actual = self.combo_ciclos.currentText()

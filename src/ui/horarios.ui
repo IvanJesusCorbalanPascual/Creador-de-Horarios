@@ -226,7 +226,7 @@ color:white;</string>
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
-          <number>2</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="page_profesores">
           <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -284,6 +284,9 @@ color:white;</string>
              </property>
              <item>
               <widget class="QPushButton" name="btn_agregar_profe">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Agregar Profesor</string>
                </property>
@@ -291,6 +294,9 @@ color:white;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_editar_profe">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Editar Profesor</string>
                </property>
@@ -298,6 +304,9 @@ color:white;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_borrar_profe">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Borrar Profesor</string>
                </property>
@@ -424,6 +433,9 @@ color:white;</string>
              </property>
              <item>
               <widget class="QPushButton" name="btn_agregar_modulo">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Agregar Modulo</string>
                </property>
@@ -431,6 +443,9 @@ color:white;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_editar_modulo">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Editar Modulo</string>
                </property>
@@ -438,6 +453,9 @@ color:white;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_eliminar_modulo">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Eliminar Modulo</string>
                </property>
@@ -452,6 +470,11 @@ color:white;</string>
                <string>1</string>
               </property>
              </row>
+             <column>
+              <property name="text">
+               <string>Nombre</string>
+              </property>
+             </column>
              <column>
               <property name="text">
                <string>Nombre</string>
