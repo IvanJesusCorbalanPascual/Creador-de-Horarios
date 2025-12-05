@@ -6,7 +6,8 @@ from PyQt5.QtGui import QColor
 from PyQt5 import uic
 from src.logica.profesor_manager import ProfesorManager # Importa la logica
 from src.modelos.modelos import Profesor # Importa el modelo
-from src.bd.bd_manager import db # Importa la instancia de BD
+from src.bd.bd_manager import db
+from src.logica.modulo_manager import ModuloManager
 
 # Asumiendo que la configuracion de la DB esta en un dict
 # Reemplazar con tus credenciales reales de Supabase/PostgreSQL
@@ -73,18 +74,21 @@ class DialogoProfesor(QDialog):
         else:
             QMessageBox.critical(self, "Error de DB", "Fallo al guardar en la base de datos")
 
-
 # --- Ventana Principal ---
 class MiAplicacion(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.db = db
+
+        self.modulo_manager = ModuloManager(self.db)
         
         # Cargando la vista de horarios
         uic.loadUi("src/ui/horarios.ui", self) 
         self.profesor_manager = ProfesorManager(DB_CONFIG)
         self.cargar_ciclos_db() # Cargar ciclos al inicio
         self.configuracion_menu()
-        self.cambiar_pagina(0)
+        self.cambiar_pagina(0) # Pagina por defecto al abrir la apliacion
 
     def configuracion_menu(self):
         # Mapeo de Botones
@@ -111,6 +115,27 @@ class MiAplicacion(QMainWindow):
         elif index == 2:
             self.cargar_horario()
 
+    def cambiar_ciclo(self):
+        ciclo_actual = self.combo_ciclos.currentText()
+        print(f"Ciclo cambiado a {ciclo_actual}")
+        indice_actual = self.stackedWidget.currentIndex()
+        self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
+
+    """
+    def cargar_ciclo(self):
+        lista_ciclos = self.db.obtener_ciclos()
+
+        self.combo_ciclos.clear()
+        if lista_ciclos:
+            for ciclo in lista_ciclos:
+                self.combo_ciclos.addItem(ciclo['nombre'])
+
+        try:
+            self.combo_ciclos.currentTextChanged.disconnect()
+        except:
+            pass
+        self.combo_ciclos.currentTextChanged.connect(self.cambiar_ciclo)
+    """
     def cargar_ciclos_db(self):
         """Carga los ciclos desde la base de datos al ComboBox"""
         ciclos = db.obtener_ciclos()
@@ -243,15 +268,15 @@ class MiAplicacion(QMainWindow):
         indice_actual = self.stackedWidget.currentIndex()
         self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
  
-    def cargar_modulos(self): # Funcion anadida segun tu peticion
-        print("cargando modulos...")
- 
-    def cargar_horario(self): # Funcion anadida segun tu peticion
-        print("cargando horarios...")
-        
     def cargar_modulos(self):
         print("cargando modulos...")
-
+        ciclo_actual = self.combo_ciclos.currentText()
+        # llamada a la tabla_modulos en tu UI
+        if hasattr(self, 'tabla_modulos'):
+             self.modulo_manager.cargar_modulos_en_tabla(self.tabla_modulos, ciclo_actual)
+        else:
+             print("Error: No se encontro la tabla 'tabla_modulos' en la UI")
+ 
     def cargar_horario(self):
         print("cargando horarios...")
 
