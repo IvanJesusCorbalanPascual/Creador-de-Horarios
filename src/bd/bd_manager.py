@@ -5,7 +5,7 @@ from supabase import create_client, Client
 URL = "https://lvcrigxkcyyeqbqfgruo.supabase.co"
 KEY = "sb_publishable_AghBIqMcP2jEpnT2DiGYUA_2U2dLRy3"
 
-class BDManager:
+class DBManager:
     def __init__(self):
         self.client: Client = create_client(URL, KEY)
         print("Cliente de Supabase Inicializado")
@@ -34,6 +34,39 @@ class BDManager:
         except Exception as e:
             print(f"Error obtener_profesores: {e}")
             return []
+
+    def obtener_profesores_por_ciclo(self, ciclo_id: int):
+        # Devuelve los profesores asignados a un ciclo especifico
+        try:
+            # Seleccionamos la relacion. Supabase devuelve: [{'profesor_id': 1, 'profesores': {'nombre': ...}}]
+            res = self.client.table("profesor_ciclo").select("profesor_id, profesores(*)").eq("ciclo_id", ciclo_id).execute()
+            
+            # Limpiamos la respuesta para devolver una lista de objetos profesor plana
+            lista_profesores = []
+            for item in res.data:
+                if item.get('profesores'):
+                    # Flatten the dict
+                    profe = item['profesores']
+                    lista_profesores.append(profe)
+            return lista_profesores
+        except Exception as e:
+            print(f"Error obtener_profesores_por_ciclo: {e}")
+            return []
+
+    def asignar_profesor_a_ciclo(self, profesor_id: int, ciclo_id: int):
+        try:
+            datos = {"profesor_id": profesor_id, "ciclo_id": ciclo_id}
+            return self.client.table("profesor_ciclo").insert(datos).execute()
+        except Exception as e:
+            print(f"Error al asignar profesor a ciclo: {e}")
+            return None
+
+    def eliminar_profesor_de_ciclo(self, profesor_id: int, ciclo_id: int):
+        try:
+            return self.client.table("profesor_ciclo").delete().eq("profesor_id", profesor_id).eq("ciclo_id", ciclo_id).execute()
+        except Exception as e:
+            print(f"Error al eliminar profesor de ciclo: {e}")
+            return None
 
     def agregar_o_editar_profesor(self, datos: dict):
         """
@@ -160,4 +193,4 @@ class BDManager:
             return []
 
 # Instancia única para usar en el resto del programa
-db = BDManager()
+db = DBManager()

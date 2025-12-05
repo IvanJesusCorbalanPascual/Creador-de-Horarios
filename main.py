@@ -1,9 +1,12 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
 from PyQt5 import uic
 from src.logica.profesor_manager import ProfesorManager # Importa la logica
 from src.modelos.modelos import Profesor # Importa el modelo
+from src.bd.bd_manager import db # Importa la instancia de BD
 
 # Asumiendo que la configuracion de la DB esta en un dict
 # Reemplazar con tus credenciales reales de Supabase/PostgreSQL
@@ -72,7 +75,8 @@ class MiAplicacion(QMainWindow):
         
         # Cargando la vista de horarios
         uic.loadUi("src/ui/horarios.ui", self) 
-        self.profesor_manager = ProfesorManager(DB_CONFIG) # FIX: Initialize manager
+        self.profesor_manager = ProfesorManager(DB_CONFIG)
+        self.cargar_ciclos_db() # Cargar ciclos al inicio
         self.configuracion_menu()
         self.cambiar_pagina(0)
 
@@ -82,8 +86,14 @@ class MiAplicacion(QMainWindow):
         self.btn_modulos.clicked.connect(lambda: self.cambiar_pagina(1))
         self.btn_horarios.clicked.connect(lambda: self.cambiar_pagina(2))
         
+        # Conexiones de botones de Profesores
+        self.btn_agregar_profe.clicked.connect(self.agregar_profesor)
+        self.btn_editar_profe.clicked.connect(self.editar_profesor)
+        self.btn_borrar_profe.clicked.connect(self.borrar_profesor)
+        
+        
         # Al cambiar de Ciclo, recarga la pagina
-        # self.combo_ciclos.currentTextChanged.connect(self.al_cambiar_ciclo)
+        self.combo_ciclos.currentIndexChanged.connect(self.cambiar_ciclo)
 
     def cambiar_pagina(self,index):
         self.stackedWidget.setCurrentIndex(index)
@@ -95,40 +105,51 @@ class MiAplicacion(QMainWindow):
         elif index == 2:
             self.cargar_horario()
 
-    def cambiar_ciclo(self):
-        ciclo_actual = self.combo_ciclos.currentText()
-        print(f"Ciclo cambiado a {ciclo_actual}")
-        indice_actual = self.stackedWidget.currentIndex()
-        self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
-
-    # def cargar_cilo(self):
-    """
-    sql = "SELECT nombre FROM ciclos"
-        res = self.db.consultar(sql)
-        
+    def cargar_ciclos_db(self):
+        """Carga los ciclos desde la base de datos al ComboBox"""
+        ciclos = db.obtener_ciclos()
         self.combo_ciclos.clear()
-        if res:
-            for ciclo in res:
-                self.combo_ciclos.addItem(ciclo[0]) # ciclo[0] es el nombre
-    """
+        if ciclos:
+            for ciclo in ciclos:
+                # ciclo is likely a dict {'id': 1, 'nombre': 'DAM1'}
+                self.combo_ciclos.addItem(ciclo.get('nombre'), ciclo.get('id'))
+        else:
+             self.combo_ciclos.addItem("Sin Ciclos")
     
     # Metodos para cargar las vistas
     def cargar_profesores(self):
         print("cargando profesores...")
-        # sql = "SELECT id, nombre, color_hex, horas_max_semana FROM profesores" # Unused
+        
+        # Obtener ID del ciclo seleccionado
+        ciclo_id = self.combo_ciclos.currentData()
+        
+        if ciclo_id:
+            print(f"Filtrando por ciclo ID: {ciclo_id}")
+            profesores = self.profesor_manager.get_profesores_by_ciclo_id(ciclo_id)
+        else:
+            profesores = self.profesor_manager.get_all_profesores()
 
-        profesores = self.profesor_manager.get_all_profesores() # FIX: Get professors from manager
-
+        self.tabla_profesores.setColumnCount(4)
+        self.tabla_profesores.setHorizontalHeaderLabels(["Nombre", "Color", "Horas Dia", "Horas Sem"])
         self.tabla_profesores.setRowCount(0) # Limpiar tabla
         self.tabla_profesores.setRowCount(len(profesores)) # Establecer el numero de filas
 
         for fila, profe in enumerate(profesores):
-            # Columna 0: ID (oculta)
-            self.tabla_profesores.setItem(fila, 0, QTableWidgetItem(str(profe.id))) 
-
-            # Columna 1: Nombre 
-            self.tabla_profesores.setItem(fila, 1, QTableWidgetItem(profe.nombre))
+            # Columna 0: Nombre (y guardamos ID en UserRole)
+            item_nombre = QTableWidgetItem(profe.nombre)
+            item_nombre.setData(Qt.UserRole, profe.id)
+            self.tabla_profesores.setItem(fila, 0, item_nombre)
             
+            # Columna 1: Color
+            item_color = QTableWidgetItem()
+            if profe.color_hex:
+                try:
+                    color = QColor(profe.color_hex)
+                    item_color.setBackground(color)
+                except:
+                    pass # Si el color no es valido, no hacemos nada
+            self.tabla_profesores.setItem(fila, 1, item_color)
+
             # Columna 2: Horas Max Dia 
             self.tabla_profesores.setItem(fila, 2, QTableWidgetItem(str(profe.horas_max_dia)))
 
@@ -148,8 +169,8 @@ class MiAplicacion(QMainWindow):
         """Abre el dialogo para editar el profesor seleccionado"""
         seleccion = self.tabla_profesores.currentRow()
         if seleccion >= 0:
-            # Obtener el ID de la primera columna oculta
-            profesor_id = int(self.tabla_profesores.item(seleccion, 0).text())
+            # Obtener el ID de la primera columna (UserRole)
+            profesor_id = self.tabla_profesores.item(seleccion, 0).data(Qt.UserRole)
             # Buscar el objeto profesor por ID en la lista cargada
             
             profesores = self.profesor_manager.get_all_profesores()
@@ -166,8 +187,8 @@ class MiAplicacion(QMainWindow):
         """Borra el profesor seleccionado"""
         seleccion = self.tabla_profesores.currentRow()
         if seleccion >= 0:
-            profesor_id = int(self.tabla_profesores.item(seleccion, 0).text())
-            nombre = self.tabla_profesores.item(seleccion, 1).text()
+            profesor_id = self.tabla_profesores.item(seleccion, 0).data(Qt.UserRole)
+            nombre = self.tabla_profesores.item(seleccion, 0).text()
             
             respuesta = QMessageBox.question(self, "Confirmar Borrado", 
                                              f"¿Seguro que quieres borrar a '{nombre}'",
