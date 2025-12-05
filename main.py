@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog
 from PyQt5 import uic
 from src.logica.profesor_manager import ProfesorManager # Importa la logica
 from src.modelos.modelos import Profesor # Importa el modelo
+from src.bd.bd_manager import bd
+from src.logica.modulo_manager import ModuloManager
 
 # Asumiendo que la configuracion de la DB esta en un dict
 # Reemplazar con tus credenciales reales de Supabase/PostgreSQL
@@ -64,17 +66,21 @@ class DialogoProfesor(QDialog):
         else:
             QMessageBox.critical(self, "Error de DB", "Fallo al guardar en la base de datos")
 
-
 # --- Ventana Principal ---
 class MiAplicacion(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.bd = bd
+
+        self.modulo_manager = ModuloManager(self.bd)
         
         # Cargando la vista de horarios
-        uic.loadUi("src/ui/horarios.ui", self) 
+        uic.loadUi("src/ui/horarios.ui", self)
         self.profesor_manager = ProfesorManager(DB_CONFIG) # FIX: Initialize manager
         self.configuracion_menu()
-        self.cambiar_pagina(0)
+        self.cargar_ciclo()
+        self.cambiar_pagina(0) # Pagina por defecto al abrir la apliacion
 
     def configuracion_menu(self):
         # Mapeo de Botones
@@ -101,17 +107,20 @@ class MiAplicacion(QMainWindow):
         indice_actual = self.stackedWidget.currentIndex()
         self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
 
-    # def cargar_cilo(self):
-    """
-    sql = "SELECT nombre FROM ciclos"
-        res = self.db.consultar(sql)
-        
+    def cargar_ciclo(self):
+        lista_ciclos = self.bd.obtener_ciclos()
+
         self.combo_ciclos.clear()
-        if res:
-            for ciclo in res:
-                self.combo_ciclos.addItem(ciclo[0]) # ciclo[0] es el nombre
-    """
-    
+        if lista_ciclos:
+            for ciclo in lista_ciclos:
+                self.combo_ciclos.addItem(ciclo['nombre'])
+
+        try:
+            self.combo_ciclos.currentTextChanged.disconnect()
+        except:
+            pass
+        self.combo_ciclos.currentTextChanged.connect(self.cambiar_ciclo)
+
     # Metodos para cargar las vistas
     def cargar_profesores(self):
         print("cargando profesores...")

@@ -67,6 +67,17 @@ class BDManager:
             print(f"Error al obtener los datos de los modulos: {e}")
             return []
         
+    def obtener_modulos_por_ciclo(self, nombre_ciclo: str):
+        try:
+            res = self.client.table("modulos")\
+                .select("*, ciclos!inner(nombre)")\
+                .eq("ciclos.nombre", nombre_ciclo)\
+                .execute()
+            return res.data
+        except Exception as e:
+            print(f"Error al obtener módulos del ciclo {nombre_ciclo}: {e}")
+            return []
+        
     def crear_modulo(self, datos: dict):
         try:
             res = self.client.table("modulos").insert(datos).execute()
@@ -160,4 +171,4 @@ class BDManager:
             return []
 
 # Instancia única para usar en el resto del programa
-db = BDManager()
+bd = BDManager()
