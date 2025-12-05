@@ -82,3 +82,8 @@ class ProfesorManager:
         # Elimina un profesor por su ID
         res = db.eliminar_profesor(profesor_id)
         return res is not None
+
+    def delete_profesor_from_ciclo(self, profesor_id, ciclo_id):
+        # Desvincula un profesor de un ciclo especifico
+        res = db.eliminar_profesor_de_ciclo(profesor_id, ciclo_id)
+        return res is not None

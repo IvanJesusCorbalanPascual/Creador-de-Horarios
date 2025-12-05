@@ -20,12 +20,13 @@ DB_CONFIG = {
 # --- Ventana para Agregar/Editar Profesor ---
 class DialogoProfesor(QDialog):
     """Ventana de dialogo para el CRUD de Profesores"""
-    def __init__(self, parent=None, profesor=None):
+    def __init__(self, parent=None, profesor=None, ciclo_id=None):
         super().__init__(parent)
         # Cargamos la vista del formulario
         uic.loadUi(os.path.join("src", "ui", "profesor_form.ui"), self) 
         self.profesor_manager = ProfesorManager(DB_CONFIG)
         self.profesor = profesor # Profesor a editar, o None si es nuevo
+        self.ciclo_id = ciclo_id # Ciclo al que pertenece (opcional)
         self.setWindowTitle("Editar Profesor" if profesor else "Agregar Profesor")
         
         # Inicializar campos si estamos editando
@@ -60,7 +61,12 @@ class DialogoProfesor(QDialog):
             # Nuevo
             # Constructor: Profesor(id, nombre, horas_max_dia, horas_max_semana)
             nuevo_profe = Profesor(None, nombre, h_dia, h_sem)
-            exito = self.profesor_manager.add_profesor(nuevo_profe)
+            nuevo_id = self.profesor_manager.add_profesor(nuevo_profe)
+            exito = nuevo_id is not None
+            
+            # Si se creo exitosamente y tenemos un ciclo seleccionado, lo asignamos
+            if exito and self.ciclo_id:
+                self.profesor_manager.assign_profesor_to_cycle(nuevo_id, self.ciclo_id)
         
         if exito:
             self.accept() # Cierra el dialogo con exito
@@ -161,7 +167,8 @@ class MiAplicacion(QMainWindow):
 
     def agregar_profesor(self):
         """Abre el dialogo para agregar un profesor"""
-        dialogo = DialogoProfesor(self)
+        ciclo_id = self.combo_ciclos.currentData() # Obtener ID del ciclo actual
+        dialogo = DialogoProfesor(self, ciclo_id=ciclo_id)
         if dialogo.exec_() == QDialog.Accepted:
             self.cargar_profesores() # Recargar la tabla tras el exito
 
@@ -184,21 +191,49 @@ class MiAplicacion(QMainWindow):
             QMessageBox.warning(self, "Advertencia", "Selecciona un profesor para editar")
 
     def borrar_profesor(self):
-        """Borra el profesor seleccionado"""
+        """Borra el profesor asociado o totalmente"""
         seleccion = self.tabla_profesores.currentRow()
         if seleccion >= 0:
             profesor_id = self.tabla_profesores.item(seleccion, 0).data(Qt.UserRole)
             nombre = self.tabla_profesores.item(seleccion, 0).text()
+            ciclo_id = self.combo_ciclos.currentData()
+
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Borrar Profesor")
+            msg_box.setText(f"Opciones de borrado para '{nombre}'")
+            msg_box.setIcon(QMessageBox.Question)
             
-            respuesta = QMessageBox.question(self, "Confirmar Borrado", 
-                                             f"¿Seguro que quieres borrar a '{nombre}'",
+            btn_ciclo = None
+            if ciclo_id:
+                btn_ciclo = msg_box.addButton("Eliminar del Ciclo Actual", QMessageBox.ActionRole)
+            
+            btn_total = msg_box.addButton("Eliminar TOTALMENTE (BD)", QMessageBox.ActionRole)
+            btn_cancel = msg_box.addButton("Cancelar", QMessageBox.RejectRole)
+            
+            msg_box.exec_()
+            
+            clicked_button = msg_box.clickedButton()
+            
+            if clicked_button == btn_cancel:
+                return
+
+            if clicked_button == btn_ciclo and ciclo_id:
+                # Eliminar solo de la relacion profesor_ciclo
+                 if self.profesor_manager.delete_profesor_from_ciclo(profesor_id, ciclo_id):
+                    self.cargar_profesores()
+                 else:
+                    QMessageBox.critical(self, "Error", "Fallo al desvincular del ciclo")
+            
+            elif clicked_button == btn_total:
+                # Confirmacion extra para borrado total
+                confirm = QMessageBox.question(self, "Confirmar Borrado Total", 
+                                             f"Esto borrará a '{nombre}' de TODOS los ciclos y de la base de datos.\n¿Seguro?",
                                              QMessageBox.Yes | QMessageBox.No)
-            
-            if respuesta == QMessageBox.Yes:
-                if self.profesor_manager.delete_profesor(profesor_id):
-                    self.cargar_profesores() # Recargar la tabla
-                else:
-                    QMessageBox.critical(self, "Error de DB", "Fallo al borrar el profesor")
+                if confirm == QMessageBox.Yes:
+                    if self.profesor_manager.delete_profesor(profesor_id):
+                        self.cargar_profesores()
+                    else:
+                        QMessageBox.critical(self, "Error DB", "Fallo al borrar totalmente")
         else:
             QMessageBox.warning(self, "Advertencia", "Selecciona un profesor para borrar")
 
