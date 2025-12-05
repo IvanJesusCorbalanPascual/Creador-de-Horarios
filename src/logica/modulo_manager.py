@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QTableWidget
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
 from src.modelos.modelos import Modulo
-from src.bd.bd_manager import bd
+
 
 class ModuloManager:
     def __init__(self, bd):
@@ -19,12 +19,12 @@ class ModuloManager:
             for fila_idx, modulo in enumerate(datos):
                 tabla_widget.insertRow(fila_idx)
 
-                tabla_widget.setItem(fila_idx, 0, QTableWidget(str(modulo['id'])))
-                tabla_widget.setItem(fila_idx, 1, QTableWidget(str(modulo['nombre'])))
-                tabla_widget.setItem(fila_idx, 2, QTableWidget(str(modulo['horas_semanales'])))
+                tabla_widget.setItem(fila_idx, 0, QTableWidgetItem(str(modulo['id'])))
+                tabla_widget.setItem(fila_idx, 1, QTableWidgetItem(str(modulo['nombre'])))
+                tabla_widget.setItem(fila_idx, 2, QTableWidgetItem(str(modulo['horas_semanales'])))
 
                 if 'horas_max_dia' in modulo:
-                    tabla_widget.setItem(fila_idx, 3, QTableWidget(str(modulo['horas_max_dia'])))
+                    tabla_widget.setItem(fila_idx, 3, QTableWidgetItem(str(modulo['horas_max_dia'])))
 
             tabla_widget.setColumnHidden(0,True)
             tabla_widget.resizeContentsToColumns()
@@ -45,4 +45,4 @@ class ModuloManager:
         return False
     
     def eliminar_modulo(self, id_modulo):
-        
+        pass
