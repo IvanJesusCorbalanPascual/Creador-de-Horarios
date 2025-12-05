@@ -122,7 +122,10 @@ class BDManager:
 
     def obtener_preferencias(self, profesor_id=None):
         try:
-            query = self.client.table("preferencias").select("*")
+            columnas = "id, profesor_id, dia_semana, nivel_prioridad, motivo, hora_inicio::text, hora_fin::text"
+
+            query = self.client.table("preferencias").select(columnas)
+            
             if profesor_id:
                 query = query.eq("profesor_id", profesor_id)
             return query.execute().data
