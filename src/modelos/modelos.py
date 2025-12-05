@@ -1,7 +1,6 @@
 # Constantes de prioridad
-PRIORIDAD_NO = 0 # Normal, el profesor puede
-PRIORIDAD_CRITICA = 1 # Rojo, el profesor no pupede
-PRIORIDAD_PREFERENCIA = 2 # Amarillo, el profesor prefiere que no
+PRIORIDAD_CRITICA = 1 
+PRIORIDAD_PREFERENCIA = 2 
 
 class Ciclo:
     def __init__(self, id, nombre):
@@ -18,6 +17,14 @@ class Profesor:
         self.color_hex = color_hex
         self.horas_max_dia = horas_max_dia
         self.horas_max_semana = horas_max_semana
+        self.modulos = [] # Lista de modulos que imparte
+        self.preferencias = [] # Lista de preferencias horarias
+
+    def agregar_modulo(self, modulo):
+        self.modulos.append(modulo)
+
+    def agregar_preferencia(self, preferencia):
+        self.preferencias.append(preferencia)
 
     def __str__(self): # Metodo toString
         return self.nombre
