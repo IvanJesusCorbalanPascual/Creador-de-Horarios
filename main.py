@@ -20,13 +20,14 @@ DB_CONFIG = {
 
 # --- Ventana para Agregar/Editar Profesor ---
 class DialogoProfesor(QDialog):
-    """Ventana de dialogo para el CRUD de Profesores"""
-    def __init__(self, parent=None, profesor=None):
+    # Ventana de dialogo para el CRUD de Profesores
+    def __init__(self, parent=None, profesor=None, ciclo_id=None):
         super().__init__(parent)
         # Cargamos la vista del formulario
         uic.loadUi(os.path.join("src", "ui", "profesor_form.ui"), self) 
         self.profesor_manager = ProfesorManager(DB_CONFIG)
         self.profesor = profesor # Profesor a editar, o None si es nuevo
+        self.ciclo_id = ciclo_id # Ciclo al que pertenece (opcional)
         self.setWindowTitle("Editar Profesor" if profesor else "Agregar Profesor")
         
         # Inicializar campos si estamos editando
@@ -40,7 +41,7 @@ class DialogoProfesor(QDialog):
         self.buttonBox.rejected.connect(self.reject)
 
     def aceptar(self):
-        """Valida y guarda el profesor"""
+        # Valida y guarda el profesor
         # Recoger datos del formulario
         nombre = self.le_nombre.text().strip()
         h_dia = self.sb_horas_max_dia.value()
@@ -61,7 +62,12 @@ class DialogoProfesor(QDialog):
             # Nuevo
             # Constructor: Profesor(id, nombre, horas_max_dia, horas_max_semana)
             nuevo_profe = Profesor(None, nombre, h_dia, h_sem)
-            exito = self.profesor_manager.add_profesor(nuevo_profe)
+            nuevo_id = self.profesor_manager.add_profesor(nuevo_profe)
+            exito = nuevo_id is not None
+            
+            # Si se creo exitosamente y tenemos un ciclo seleccionado, lo asignamos
+            if exito and self.ciclo_id:
+                self.profesor_manager.assign_profesor_to_cycle(nuevo_id, self.ciclo_id)
         
         if exito:
             self.accept() # Cierra el dialogo con exito
@@ -69,7 +75,7 @@ class DialogoProfesor(QDialog):
             QMessageBox.critical(self, "Error de DB", "Fallo al guardar en la base de datos")
 
 class DialogoModulo(QDialog):
-    """Ventana para Crear/Editar Módulos"""
+    # Ventana para Crear/Editar Módulos
     def __init__(self, parent=None, datos_modulo=None, ciclo_id=None):
         super().__init__(parent)
         # Carga el archivo UI que diseñes para módulos
@@ -86,7 +92,7 @@ class DialogoModulo(QDialog):
             self.sb_horas_max_dia.setValue(int(self.datos_modulo['horas_max_dia']))
 
     def obtener_datos(self):
-        """Devuelve un diccionario con lo que escribió el usuario"""
+        # Devuelve un diccionario con lo que escribió el usuario
         return {
             "nombre": self.le_nombre.text().strip(),
             "horas_semanales": self.sb_horas_max_semana.value(),
@@ -145,7 +151,7 @@ class MiAplicacion(QMainWindow):
         self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
 
     def cargar_ciclos_db(self):
-        """Carga los ciclos desde la base de datos al ComboBox"""
+        # Carga los ciclos desde la base de datos al ComboBox
         ciclos = db.obtener_ciclos()
         self.combo_ciclos.clear()
         if ciclos:
@@ -201,6 +207,13 @@ class MiAplicacion(QMainWindow):
     def agregar_profesor(self):
         # Abre el dialogo para agregar un profesor
         dialogo = DialogoProfesor(self)
+
+        """
+        Abre el dialogo para agregar un profesor
+        ciclo_id = self.combo_ciclos.currentData() # Obtener ID del ciclo actual
+        dialogo = DialogoProfesor(self, ciclo_id=ciclo_id)
+        """
+
         if dialogo.exec_() == QDialog.Accepted:
             self.cargar_profesores() # Recargar la tabla tras el exito
 
@@ -227,16 +240,44 @@ class MiAplicacion(QMainWindow):
         if seleccion >= 0:
             profesor_id = self.tabla_profesores.item(seleccion, 0).data(Qt.UserRole)
             nombre = self.tabla_profesores.item(seleccion, 0).text()
+            ciclo_id = self.combo_ciclos.currentData()
+
+            msg_box = QMessageBox(self)
+            msg_box.setWindowTitle("Borrar Profesor")
+            msg_box.setText(f"Opciones de borrado para '{nombre}'")
+            msg_box.setIcon(QMessageBox.Question)
             
-            respuesta = QMessageBox.question(self, "Confirmar Borrado", 
-                                             f"¿Seguro que quieres borrar a '{nombre}'",
+            btn_ciclo = None
+            if ciclo_id:
+                btn_ciclo = msg_box.addButton("Eliminar del Ciclo Actual", QMessageBox.ActionRole)
+            
+            btn_total = msg_box.addButton("Eliminar TOTALMENTE (BD)", QMessageBox.ActionRole)
+            btn_cancel = msg_box.addButton("Cancelar", QMessageBox.RejectRole)
+            
+            msg_box.exec_()
+            
+            clicked_button = msg_box.clickedButton()
+            
+            if clicked_button == btn_cancel:
+                return
+
+            if clicked_button == btn_ciclo and ciclo_id:
+                # Eliminar solo de la relacion profesor_ciclo
+                 if self.profesor_manager.delete_profesor_from_ciclo(profesor_id, ciclo_id):
+                    self.cargar_profesores()
+                 else:
+                    QMessageBox.critical(self, "Error", "Fallo al desvincular del ciclo")
+            
+            elif clicked_button == btn_total:
+                # Confirmacion extra para borrado total
+                confirm = QMessageBox.question(self, "Confirmar Borrado Total", 
+                                             f"Esto borrará a '{nombre}' de TODOS los ciclos y de la base de datos.\n¿Seguro?",
                                              QMessageBox.Yes | QMessageBox.No)
-            
-            if respuesta == QMessageBox.Yes:
-                if self.profesor_manager.delete_profesor(profesor_id):
-                    self.cargar_profesores() # Recargar la tabla
-                else:
-                    QMessageBox.critical(self, "Error de DB", "Fallo al borrar el profesor")
+                if confirm == QMessageBox.Yes:
+                    if self.profesor_manager.delete_profesor(profesor_id):
+                        self.cargar_profesores()
+                    else:
+                        QMessageBox.critical(self, "Error DB", "Fallo al borrar totalmente")
         else:
             QMessageBox.warning(self, "Advertencia", "Selecciona un profesor para borrar")
 
@@ -266,7 +307,7 @@ class MiAplicacion(QMainWindow):
                 QMessageBox.critical(self, "Error", "No se pudo guardar el módulo.")
 
     def editar_modulo(self):
-        """Edita el módulo seleccionado en la tabla"""
+        # Editar el módulo seleccionado en la tabla
         # 1. Comprobar selección
         fila = self.tabla_modulos.currentRow()
         if fila < 0:
@@ -303,7 +344,7 @@ class MiAplicacion(QMainWindow):
                 QMessageBox.critical(self, "Error", "Fallo al actualizar el módulo")
 
     def borrar_modulo(self):
-        """Elimina el módulo seleccionado"""
+        # Elimina el módulo seleccionado
         fila = self.tabla_modulos.currentRow()
         if fila < 0:
             QMessageBox.warning(self, "Aviso", "Selecciona un módulo para borrar")
