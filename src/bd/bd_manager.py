@@ -5,7 +5,7 @@ from supabase import create_client, Client
 URL = "https://lvcrigxkcyyeqbqfgruo.supabase.co"
 KEY = "sb_publishable_AghBIqMcP2jEpnT2DiGYUA_2U2dLRy3"
 
-class DBManager:
+class BDManager:
     def __init__(self):
         self.client: Client = create_client(URL, KEY)
         print("Cliente de Supabase Inicializado")
@@ -160,4 +160,4 @@ class DBManager:
             return []
 
 # Instancia única para usar en el resto del programa
-db = DBManager()
+db = BDManager()
