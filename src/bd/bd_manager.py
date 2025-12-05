@@ -3,7 +3,7 @@ from supabase import create_client, Client
 
 # CONSTANTES
 URL = "https://lvcrigxkcyyeqbqfgruo.supabase.co"
-KEY = "sb_publishable_AghBIqMcP2jEpnT2DiGYUA_2U2dLRy3"
+KEY = "sb_secret_b_o0X_MZDs9IWdxSs-kuHA_W5mNG5dX"
 
 class DBManager:
     def __init__(self):
@@ -48,6 +48,8 @@ class DBManager:
                     # Flatten the dict
                     profe = item['profesores']
                     lista_profesores.append(profe)
+            if lista_profesores:
+               print(f"DEBUG: Primer profesor cargado: {lista_profesores[0]}")
             return lista_profesores
         except Exception as e:
             print(f"Error obtener_profesores_por_ciclo: {e}")
@@ -76,16 +78,39 @@ class DBManager:
         """
         try:
             if "id" in datos and datos["id"]:
-                return self.client.table("profesores").update(datos).eq("id", datos["id"]).execute()
+                # Update existente
+                pk = datos["id"]
+                datos_update = datos.copy()
+                del datos_update["id"] # No actualizamos la PK
+                print(f"Actualizando profesor ID {pk} con: {datos_update}")
+                res = self.client.table("profesores").update(datos_update).eq("id", pk).execute()
+                print(f"Respuesta Supabase (Update): {res}")
+                if not res.data:
+                    print(f"ADVERTENCIA: No se actualizó ningún registro con ID {pk}")
+                return res
             else:
-                return self.client.table("profesores").insert(datos).execute()
+                # Insertar nuevo
+                print(f"Creando profesor: {datos}")
+                res = self.client.table("profesores").insert(datos).execute()
+                print(f"Respuesta Supabase (Insert): {res}")
+                return res
         except Exception as e:
             print(f"Error al Crear / Editar el profesor: {e}")
+            import traceback
+            traceback.print_exc()
             return None
             
     def eliminar_profesor(self, id_profesor: int):
         try:
+            # Eliminar relaciones en otras tablas antes de borrar el profesor
+            self.client.table("profesor_ciclo").delete().eq("profesor_id", id_profesor).execute()
+            self.client.table("competencia_profesor").delete().eq("profesor_id", id_profesor).execute()
+            self.client.table("preferencias").delete().eq("profesor_id", id_profesor).execute()
+            self.client.table("horario_generado").delete().eq("profesor_id", id_profesor).execute()
+
+            # Finalmente, eliminar el profesor
             res = self.client.table("profesores").delete().eq("id", id_profesor).execute()
+            print(f"Profesor borrado: {res.data}")
             return res.data
         except Exception as e:
             print(f"Error al eliminar el profesor: {e}")
