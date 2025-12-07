@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>380</width>
-    <height>252</height>
+    <width>385</width>
+    <height>320</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -50,7 +50,7 @@
          <number>1</number>
         </property>
         <property name="maximum">
-         <number>8</number>
+         <number>6</number>
         </property>
         <property name="value">
          <number>6</number>
@@ -70,10 +70,24 @@
          <number>1</number>
         </property>
         <property name="maximum">
-         <number>40</number>
+         <number>30</number>
         </property>
         <property name="value">
          <number>30</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Profesor Asignado</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="le_profesor">
+        <property name="placeholderText">
+         <string>Nombre del profesor...</string>
         </property>
        </widget>
       </item>

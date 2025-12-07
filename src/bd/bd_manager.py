@@ -74,22 +74,23 @@ class DBManager:
         """
         Permite añadir o editar un profesor manualmente pasandole un diccionario
         'nombre': '...', 'horas_max_dia': '...', etc... (DEBE COINCIDIR)
-        Si existe este id, se actualizará, sino se creará
+        Si existe este id, el profesor se actualizará, sino, se creará
         """
         try:
-            if "id" in datos and datos["id"]:
-                # Update existente
+            if "id" in datos and datos["id"]: # Si existe un profesor con este id, se actualizan los nuevos datos
+                # Almacenando la Primary Key de datos (id)
                 pk = datos["id"]
+                # Creando una copia de datos para no modificar el original hasta que termine la operacion
                 datos_update = datos.copy()
-                del datos_update["id"] # No actualizamos la PK
+                # Eliminando la PK de la copia para no actualizarla
+                del datos_update["id"]
                 print(f"Actualizando profesor ID {pk} con: {datos_update}")
                 res = self.client.table("profesores").update(datos_update).eq("id", pk).execute()
                 print(f"Respuesta Supabase (Update): {res}")
                 if not res.data:
                     print(f"ADVERTENCIA: No se actualizó ningún registro con ID {pk}")
                 return res
-            else:
-                # Insertar nuevo
+            else: # Si no hay id entones se crea / inserta un el nuevo profesor en la bd
                 print(f"Creando profesor: {datos}")
                 res = self.client.table("profesores").insert(datos).execute()
                 print(f"Respuesta Supabase (Insert): {res}")
@@ -134,6 +135,22 @@ class DBManager:
             return res.data
         except Exception as e:
             print(f"Error al obtener módulos del ciclo {nombre_ciclo}: {e}")
+            return []
+
+    def obtener_profesores_por_modulo(self, modulo_id: int):
+        # Devuelve la lista de nombres de profesores que pueden impartir un módulo
+        try:
+            # Consulta: de competencia, trae el nombre del profesor que coincide con el modulo_id
+            query = "profesor_id, profesores(nombre)"
+            res = self.client.table("competencia_profesor")\
+                .select(query)\
+                .eq("modulo_id", modulo_id)\
+                .execute()
+            
+            # Formateando la respuesta para devolver solo una lista de nombres (Ej: ["Juan", "Ana"])
+            return [item['profesores']['nombre'] for item in res.data if item['profesores']]
+        except Exception as e:
+            print(f"Error obtener_profesores_por_modulo: {e}")
             return []
         
     def crear_modulo(self, datos: dict):

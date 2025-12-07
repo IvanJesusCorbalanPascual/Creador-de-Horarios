@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5 import uic
@@ -9,8 +9,7 @@ from src.modelos.modelos import Profesor # Importa el modelo
 from src.bd.bd_manager import db
 from src.logica.modulo_manager import ModuloManager
 
-# Asumiendo que la configuracion de la DB esta en un dict
-# Reemplazar con tus credenciales reales de Supabase/PostgreSQL
+# Reemplazando las credenciales reales de Supabase/PostgreSQL en forma de dict
 DB_CONFIG = {
     'host': 'tu_host_db',
     'database': 'tu_db_name',
@@ -36,6 +35,7 @@ class DialogoProfesor(QDialog):
             self.sb_horas_max_dia.setValue(profesor.horas_max_dia)
             self.sb_horas_max_semana.setValue(profesor.horas_max_semana)
 
+
         # Conectar botones (Aceptar y Cancelar)
         self.buttonBox.accepted.connect(self.aceptar)
         self.buttonBox.rejected.connect(self.reject)
@@ -46,6 +46,7 @@ class DialogoProfesor(QDialog):
         nombre = self.le_nombre.text().strip()
         h_dia = self.sb_horas_max_dia.value()
         h_sem = self.sb_horas_max_semana.value()
+
 
         if not nombre:
             QMessageBox.warning(self, "Error", "El nombre no puede estar vacio")
@@ -90,6 +91,7 @@ class DialogoModulo(QDialog):
             self.le_nombre.setText(str(self.datos_modulo['nombre']))
             self.sb_horas_max_semana.setValue(int(self.datos_modulo['horas_semanales']))
             self.sb_horas_max_dia.setValue(int(self.datos_modulo['horas_max_dia']))
+            self.le_profesor.setText(str(self.datos_modulo['profesor_asignado']))
 
     def obtener_datos(self):
         # Devuelve un diccionario con lo que escribió el usuario
@@ -97,6 +99,7 @@ class DialogoModulo(QDialog):
             "nombre": self.le_nombre.text().strip(),
             "horas_semanales": self.sb_horas_max_semana.value(),
             "horas_max_dia": self.sb_horas_max_dia.value(),
+            "profesor_asignado": self.le_profesor.text().strip(),
             "ciclo_id": self.ciclo_id # Importante: asignamos el módulo al ciclo actual
         }
 # --- Ventana Principal ---
@@ -203,6 +206,7 @@ class MiAplicacion(QMainWindow):
             
             # Ajustar columnas al contenido (opcional)
             self.tabla_profesores.resizeColumnsToContents()
+            self.tabla_profesores.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     def agregar_profesor(self):
         # Abre el dialogo para agregar un profesor
@@ -308,36 +312,37 @@ class MiAplicacion(QMainWindow):
 
     def editar_modulo(self):
         # Editar el módulo seleccionado en la tabla
-        # 1. Comprobar selección
+        # Comprobar que la fila es correcta
         fila = self.tabla_modulos.currentRow()
         if fila < 0:
             QMessageBox.warning(self, "Aviso", "Selecciona un módulo para editar")
             return
 
-        # 2. Recuperar datos de la tabla para pre-llenar el formulario
-        # (Es más rápido que consultar a la BD otra vez)
+        # Recuperar datos de la tabla para pre-llenar el formulario
         id_modulo = self.tabla_modulos.item(fila, 0).text()
         nombre = self.tabla_modulos.item(fila, 1).text()
         h_sem = self.tabla_modulos.item(fila, 2).text()
         h_dia = self.tabla_modulos.item(fila, 3).text()
         
         # Empaquetamos en un dict temporal
+        profesor_asignado = self.tabla_modulos.item(fila, 4).text() if self.tabla_modulos.item(fila, 4) else ""
         datos_actuales = {
             'nombre': nombre,
             'horas_semanales': h_sem,
-            'horas_max_dia': h_dia
+            'horas_max_dia': h_dia,
+            'profesor_asignado': profesor_asignado
         }
         
         # Recuperamos ciclo_id por si acaso (aunque al editar no solemos cambiarlo de ciclo aquí)
         ciclo_id = self.combo_ciclos.currentData()
 
-        # 3. Abrir diálogo
+        # Abrir diálogo
         dialogo = DialogoModulo(self, datos_modulo=datos_actuales, ciclo_id=ciclo_id)
         
         if dialogo.exec_() == QDialog.Accepted:
             nuevos_datos = dialogo.obtener_datos()
             
-            # 4. Actualizar
+            # Actualizar
             if self.modulo_manager.editar_modulo(id_modulo, nuevos_datos):
                 self.cargar_modulos()
             else:
@@ -359,17 +364,18 @@ class MiAplicacion(QMainWindow):
         )
         
         if confirmacion == QMessageBox.Yes:
-            # Pasamos la tabla entera al manager, él sabe buscar el ID y borrar
+            # Pasamos la tabla entera al manager, este buscará el ID y lo borrará
             if self.modulo_manager.eliminar_modulo(self.tabla_modulos):
                 self.cargar_modulos()
             else:
                 QMessageBox.critical(self, "Error", "No se pudo borrar el módulo")
 
-    def cambiar_ciclo(self): # Funcion anadida segun tu peticion
+    def cambiar_ciclo(self):
+        # Cambia el ciclo seleccionado
         ciclo_actual = self.combo_ciclos.currentText()
         print(f"Ciclo cambiado a {ciclo_actual}")
         indice_actual = self.stackedWidget.currentIndex()
-        self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
+        self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el usuario
  
     def cargar_modulos(self):
         print("cargando modulos...")
@@ -377,6 +383,9 @@ class MiAplicacion(QMainWindow):
         # llamada a la tabla_modulos en tu UI
         if hasattr(self, 'tabla_modulos'):
              self.modulo_manager.cargar_modulos_en_tabla(self.tabla_modulos, ciclo_actual)
+             self.tabla_modulos.resizeColumnsToContents()
+             self.tabla_modulos.resizeRowsToContents()
+             self.tabla_modulos.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         else:
              print("Error: No se encontro la tabla 'tabla_modulos' en la UI")
  
@@ -388,3 +397,4 @@ if __name__ == "__main__":
     window = MiAplicacion()
     window.show()
     app.exec_()
+

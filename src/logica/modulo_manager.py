@@ -26,6 +26,8 @@ class ModuloManager:
                 if 'horas_max_dia' in modulo:
                     tabla_widget.setItem(fila_idx, 3, QTableWidgetItem(str(modulo['horas_max_dia'])))
 
+                tabla_widget.setItem(fila_idx, 4, QTableWidgetItem(str(modulo['profesor_asignado'])))
+
             tabla_widget.setColumnHidden(0,True)
             tabla_widget.resizeColumnsToContents()
 
