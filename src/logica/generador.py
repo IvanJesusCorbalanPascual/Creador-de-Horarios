@@ -26,8 +26,11 @@ class GeneradorAutomatico:
         # Aqui se guarda el horario generado
         self.profesores_por_modulo = {}
 
-        # Evita duplicados
+        # Evita duplicados de profesor
         self.asignaciones = {}
+
+        # Evita duplicados de grupo/alumnos
+        self.ocupacion_grupos = {}
 
 
     # Descarga los datos de Supabase antes de empezar
@@ -78,6 +81,7 @@ class GeneradorAutomatico:
 
             # Limpia completamente para intentarlo de nuevo
             self.asignaciones = {}
+            self.ocupacion_grupos = {}
             for modulo in self.modulos:
                 self.profesores_por_modulo[modulo['id']] = []
 
@@ -143,20 +147,19 @@ class GeneradorAutomatico:
 
         for modulo in modulos_ordenados:
             horas_pendientes = modulo['horas_semanales']
-            # Traduce nombre a ID
-            nombre_profesor_string = modulo['profesor_asignado']
-            
-            # Lo salta si es cualquiera de las 3
-            if not nombre_profesor_string or nombre_profesor_string in ["EMPTY", "NULL", "None"]:
+            # Lee el ID en el diccionario
+            profesor_id = modulo.get('profesor_id')
+            # Lee el ID del ciclo
+            ciclo_id = modulo.get('ciclo_id')
+
+            # Si esta vacio, lo salta
+            if profesor_id is None:
                 continue
 
-            # Busca el ID númerico usando el mapa
-            if nombre_profesor_string in self.mapa_nombres_ids:
-                profesor_id = self.mapa_nombres_ids[nombre_profesor_string]
-            else:
-                print(f"Advertencia: Me salto '{modulo['nombre']}' porque el profesor '{nombre_profesor_string}' no está en la lista de profesores")
-                print(f"   (Los profesores disponibles: {list(self.mapa_nombres_ids.keys())})")
-                # Si no encuentra el nombre en la tabla profesores, salta
+            # Comprueba que el ID existe en la tabla de profesores
+            ids_disponibles = [p['id'] for p in self.profesores]
+            if profesor_id not in ids_disponibles:
+                print(f" Error, el módulo '{modulo['nombre']}' tiene profesor_id={profesor_id} y no existe en la tabla de profesores")
                 continue
 
             intentos_sin_exito = 0
@@ -178,6 +181,10 @@ class GeneradorAutomatico:
                         ocupado = (profesor_id, dia, hora)
                         if ocupado in self.asignaciones:
                             continue
+
+                        # Si se tiene clase a esta hora no permite poner otra
+                        if ciclo_id and (ciclo_id, dia, hora) in self.ocupacion_grupos:
+                            continue
                         
                         # Traduce en numero de hora a String
                         h_inicio, h_fin = self.convertir_indice_a_hora(hora)
@@ -195,6 +202,10 @@ class GeneradorAutomatico:
                         # Asigna los huecos
                         self.asignaciones[ocupado] = modulo['id']
 
+                        # Marca el grupo como ocupado
+                        if ciclo_id:
+                            self.ocupacion_grupos[(ciclo_id, dia, hora)] = modulo['id']
+
                         bloque = {'dia': dia, 'hora': hora, 'profesor_id': profesor_id}
                         self.profesores_por_modulo[modulo['id']].append(bloque)
 
@@ -204,8 +215,8 @@ class GeneradorAutomatico:
 
                 if not asignado:
                     intentos_sin_exito += 1
-                    # Si falla muchas veces + de 20, cancela el intento
-                    if intentos_sin_exito > 20:
+                    # Si falla muchas veces + de 100, cancela el intento
+                    if intentos_sin_exito > 100:
                         print(f"Error al asignar: {modulo['nombre']} Profesor ID: {profesor_id}")
                         return False
         return True

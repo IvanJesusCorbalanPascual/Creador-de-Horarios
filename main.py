@@ -8,6 +8,7 @@ from src.logica.profesor_manager import ProfesorManager # Importa la logica
 from src.modelos.modelos import Profesor # Importa el modelo
 from src.bd.bd_manager import db
 from src.logica.modulo_manager import ModuloManager
+from src.logica.generador import GeneradorAutomatico
 
 # Reemplazando las credenciales reales de Supabase/PostgreSQL en forma de dict
 DB_CONFIG = {
@@ -115,6 +116,7 @@ class MiAplicacion(QMainWindow):
         uic.loadUi("src/ui/horarios.ui", self) 
         self.profesor_manager = ProfesorManager(DB_CONFIG)
         self.cargar_ciclos_db() # Cargar ciclos al inicio
+        self.btn_generar_auto.clicked.connect(self.ejecutar_generador)
         self.configuracion_menu()
         self.cambiar_pagina(0) # Pagina por defecto (profesores) al abrir la apliacion
 
@@ -390,7 +392,90 @@ class MiAplicacion(QMainWindow):
              print("Error: No se encontro la tabla 'tabla_modulos' en la UI")
  
     def cargar_horario(self):
-        print("cargando horarios...")
+        print("Cargando horarios...")
+
+        # Limpia la tabla visualmente
+        self.tabl_horario_grid.clearContents()
+
+        # Obtiene los datos completos del horario
+        datos = self.db.obtener_horario_completo()
+
+        if not datos:
+            return
+        
+        # Convierta una hora en un número de cada fila
+        mapa_filas = {
+            "08:00:00": 0,
+            "09:00:00": 1,
+            "10:00:00": 2,
+            "10:30:00": 3, 
+            "11:30:00": 4,
+            "12:30:00": 5,
+            "13:30:00": 6
+        }
+
+        for clase in datos:
+            try:
+                # Extrae información básica
+                dia = clase['dia_semana']
+                hora = clase['hora_inicio']
+
+                # Si no hay modulo, pone un texto por defecto que evita que falle
+                nombre_modulo = clase['modulos']['nombre'] if clase.get('modulos') else "No hay asignatura"
+
+                info_profe= clase.get('profesores')   
+                nombre_profe = info_profe['nombre'] if info_profe else "No hay profesor"
+
+                # Usa el color si tiene, si no usa color blanco
+                color_hex = info_profe['color_hex'] if info_profe and info_profe.get('color_hex') else "#ffffff"
+
+
+                # Busca la fila correspondiente
+                if hora in mapa_filas:
+                    fila = mapa_filas[hora]
+                else:
+                    continue # Si no es igual la hora que en la tabla lo salta
+
+                # Crea la celda
+                txt_celda = f"{nombre_modulo}"
+                item = QTableWidgetItem(txt_celda)
+                # Sale el profesor del modulo al pasar el ratón por encima
+                item.setToolTip(f"Profesor: {nombre_profe}")
+                item.setTextAlignment(Qt.AlignCenter)
+
+                # Aplica el color de fondo y texto
+                item.setBackground(QColor(color_hex))
+                # Letra blanca por defecto
+                item.setForeground(QColor("white"))
+
+                # Inserta todo en la tabla
+                self.tabl_horario_grid.setItem(fila, dia, item)
+
+            except Exception as e:
+                print(f"Error al rellenar una celda: {e}")
+
+
+    def ejecutar_generador(self):
+        respuesta = QMessageBox.question(
+            self, "Generar Horario", 
+            "Advertencia: Estas a punto de generar un nuevo horario, esto borrara el actual. \n ¿Estás seguro?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if respuesta == QMessageBox.Yes:
+            try:
+                # Llama al generador y lo ejecuta
+                generador = GeneradorAutomatico()
+                generador.ejecutar()
+
+                # Refresca la vista
+                self.cargar_horario()
+
+                QMessageBox.information(self, "Éxito", "¡Horario generado con éxito!", QMessageBox.Ok)
+
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Se ha producido un error: {str(e)}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

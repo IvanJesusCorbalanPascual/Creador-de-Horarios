@@ -624,6 +624,53 @@ color:white;</string>
                </property>
               </spacer>
              </item>
+             <item>
+              <widget class="QPushButton" name="btn_generar_auto">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>35</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>250</width>
+                 <height>300</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>-1</pointsize>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QPushButton {
+    background-color: #3498db; /* Azul profesional (mismo tono que suele usarse con temas oscuros) */
+    color: white;
+    font-weight: bold;
+    font-size: 13px; /* Letra un pelín más pequeña */
+    border-radius: 4px; /* Bordes menos redondeados, más serio */
+    padding: 5px;
+}
+
+QPushButton:hover {
+    background-color: #2980b9; /* Un poco más oscuro al pasar el ratón */
+}
+
+QPushButton:pressed {
+    background-color: #1abc9c; /* Un toque sutil al clicar */
+}</string>
+               </property>
+               <property name="text">
+                <string>Generar Horario</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
