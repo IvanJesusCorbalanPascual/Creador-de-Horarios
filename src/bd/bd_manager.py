@@ -48,6 +48,8 @@ class DBManager:
                     # Flatten the dict
                     profe = item['profesores']
                     lista_profesores.append(profe)
+            if lista_profesores:
+               print(f"DEBUG: Primer profesor cargado: {lista_profesores[0]}")
             return lista_profesores
         except Exception as e:
             print(f"Error obtener_profesores_por_ciclo: {e}")
@@ -72,20 +74,44 @@ class DBManager:
         """
         Permite añadir o editar un profesor manualmente pasandole un diccionario
         'nombre': '...', 'horas_max_dia': '...', etc... (DEBE COINCIDIR)
-        Si existe este id, se actualizará, sino se creará
+        Si existe este id, el profesor se actualizará, sino, se creará
         """
         try:
-            if "id" in datos and datos["id"]:
-                return self.client.table("profesores").update(datos).eq("id", datos["id"]).execute()
-            else:
-                return self.client.table("profesores").insert(datos).execute()
+            if "id" in datos and datos["id"]: # Si existe un profesor con este id, se actualizan los nuevos datos
+                # Almacenando la Primary Key de datos (id)
+                pk = datos["id"]
+                # Creando una copia de datos para no modificar el original hasta que termine la operacion
+                datos_update = datos.copy()
+                # Eliminando la PK de la copia para no actualizarla
+                del datos_update["id"]
+                print(f"Actualizando profesor ID {pk} con: {datos_update}")
+                res = self.client.table("profesores").update(datos_update).eq("id", pk).execute()
+                print(f"Respuesta Supabase (Update): {res}")
+                if not res.data:
+                    print(f"ADVERTENCIA: No se actualizó ningún registro con ID {pk}")
+                return res
+            else: # Si no hay id entones se crea / inserta un el nuevo profesor en la bd
+                print(f"Creando profesor: {datos}")
+                res = self.client.table("profesores").insert(datos).execute()
+                print(f"Respuesta Supabase (Insert): {res}")
+                return res
         except Exception as e:
             print(f"Error al Crear / Editar el profesor: {e}")
+            import traceback
+            traceback.print_exc()
             return None
             
     def eliminar_profesor(self, id_profesor: int):
         try:
+            # Eliminar relaciones en otras tablas antes de borrar el profesor
+            self.client.table("profesor_ciclo").delete().eq("profesor_id", id_profesor).execute()
+            self.client.table("competencia_profesor").delete().eq("profesor_id", id_profesor).execute()
+            self.client.table("preferencias").delete().eq("profesor_id", id_profesor).execute()
+            self.client.table("horario_generado").delete().eq("profesor_id", id_profesor).execute()
+
+            # Finalmente, eliminar el profesor
             res = self.client.table("profesores").delete().eq("id", id_profesor).execute()
+            print(f"Profesor borrado: {res.data}")
             return res.data
         except Exception as e:
             print(f"Error al eliminar el profesor: {e}")
@@ -100,12 +126,58 @@ class DBManager:
             print(f"Error al obtener los datos de los modulos: {e}")
             return []
         
+    def obtener_modulos_por_ciclo(self, nombre_ciclo: str):
+        try:
+            res = self.client.table("modulos")\
+                .select("*, ciclos!inner(nombre)")\
+                .eq("ciclos.nombre", nombre_ciclo)\
+                .execute()
+            return res.data
+        except Exception as e:
+            print(f"Error al obtener módulos del ciclo {nombre_ciclo}: {e}")
+            return []
+
+    def obtener_profesores_por_modulo(self, modulo_id: int):
+        # Devuelve la lista de nombres de profesores que pueden impartir un módulo
+        try:
+            # Consulta: de competencia, trae el nombre del profesor que coincide con el modulo_id
+            query = "profesor_id, profesores(nombre)"
+            res = self.client.table("competencia_profesor")\
+                .select(query)\
+                .eq("modulo_id", modulo_id)\
+                .execute()
+            
+            # Formateando la respuesta para devolver solo una lista de nombres (Ej: ["Juan", "Ana"])
+            return [item['profesores']['nombre'] for item in res.data if item['profesores']]
+        except Exception as e:
+            print(f"Error obtener_profesores_por_modulo: {e}")
+            return []
+        
     def crear_modulo(self, datos: dict):
         try:
             res = self.client.table("modulos").insert(datos).execute()
             return res.data
         except Exception as e:
             print(f"Error al crear el modulo: {e}")
+            return None
+
+    def actualizar_modulo(self, id_modulo: int, datos: dict):
+        try:
+            # Remove id from datos if present to avoid changing PK
+            if 'id' in datos:
+                del datos['id']
+            res = self.client.table("modulos").update(datos).eq("id", id_modulo).execute()
+            return res.data
+        except Exception as e:
+            print(f"Error al actualizar el modulo: {e}")
+            return None
+
+    def eliminar_modulo(self, id_modulo: int):
+        try:
+            res = self.client.table("modulos").delete().eq("id", id_modulo).execute()
+            return res.data
+        except Exception as e:
+            print(f"Error al eliminar el modulo: {e}")
             return None
 
     # --- COMPETENCIA ---

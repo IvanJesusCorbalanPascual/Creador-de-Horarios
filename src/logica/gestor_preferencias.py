@@ -9,8 +9,6 @@ sys.path.append(ruta_raiz)
 from src.bd.bd_manager import db
 from src.logica.validador import Validador
 
-
-
 class GestorPreferencias:
     def __init__(self):
         self.validador = Validador()
@@ -85,6 +83,3 @@ if __name__ == "__main__":
     # CASO 2: Horario libre (11:00 a 12:00) -> Debería dar 0
     resultado = gestor.comprobar_conflicto(id_juan, dia_lunes, "11:00:00", "12:00:00")
     print(f"Prueba Lunes 11:00 (Esperado: 0): {resultado}")
-
-                
-        

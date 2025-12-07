@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>380</width>
-    <height>252</height>
+    <width>385</width>
+    <height>320</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -33,7 +33,7 @@
       <item row="0" column="1">
        <widget class="QLineEdit" name="le_nombre">
         <property name="placeholderText">
-         <string>Ej: Inglés</string>
+         <string>Ej: Programacion</string>
         </property>
        </widget>
       </item>
@@ -74,6 +74,20 @@
         </property>
         <property name="value">
          <number>30</number>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Profesor Asignado</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="le_profesor">
+        <property name="placeholderText">
+         <string>Nombre del profesor...</string>
         </property>
        </widget>
       </item>

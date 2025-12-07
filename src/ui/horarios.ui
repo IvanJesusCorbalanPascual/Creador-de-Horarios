@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>830</width>
+    <width>1033</width>
     <height>671</height>
    </rect>
   </property>
@@ -81,17 +81,42 @@
        </item>
        <item>
         <widget class="QPushButton" name="btn_profesores">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>50</height>
+          </size>
+         </property>
          <property name="font">
           <font>
            <pointsize>12</pointsize>
           </font>
          </property>
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
          <property name="styleSheet">
-          <string notr="true">text-align:left;
-color:lightgrey;</string>
+          <string notr="true">/* Estilo Base del botón plano (flat) */
+QPushButton {
+    /* Mantiene el texto visible */
+    color: white;
+    /* Asegura que no tenga bordes 3D */
+    border: none;
+    /* Fondo transparente cuando está inactivo */
+    background-color: transparent;
+	text-align:left;
+	color:lightgrey
+}
+
+/* Estilo al pasar el ratón (Hover) */
+QPushButton:hover {
+    /* Aquí definimos el cambio visual */
+    background-color: #34495e; /* Gris claro sutil */
+    /*  border: 1px solid #B0B0B0; Le añade un borde sutil solo al pasar el ratón */
+}</string>
          </property>
          <property name="text">
           <string>Profesores</string>
@@ -103,17 +128,42 @@ color:lightgrey;</string>
        </item>
        <item>
         <widget class="QPushButton" name="btn_modulos">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>50</height>
+          </size>
+         </property>
          <property name="font">
           <font>
            <pointsize>12</pointsize>
           </font>
          </property>
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
          <property name="styleSheet">
-          <string notr="true">text-align:left;
-color:lightgrey;</string>
+          <string notr="true">/* Estilo Base del botón plano (flat) */
+QPushButton {
+    /* Mantiene el texto visible */
+    color: white;
+    /* Asegura que no tenga bordes 3D */
+    border: none;
+    /* Fondo transparente cuando está inactivo */
+    background-color: transparent;
+	text-align:left;
+	color:lightgrey
+}
+
+/* Estilo al pasar el ratón (Hover) */
+QPushButton:hover {
+    /* Aquí definimos el cambio visual */
+    background-color: #34495e; /* Gris claro sutil */
+    /*  border: 1px solid #B0B0B0; Le añade un borde sutil solo al pasar el ratón */
+}</string>
          </property>
          <property name="text">
           <string>Módulos</string>
@@ -125,20 +175,57 @@ color:lightgrey;</string>
        </item>
        <item>
         <widget class="QPushButton" name="btn_horarios">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>50</height>
+          </size>
+         </property>
          <property name="font">
           <font>
            <pointsize>12</pointsize>
           </font>
          </property>
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
          <property name="styleSheet">
-          <string notr="true">text-align:left;
-color:lightgrey;</string>
+          <string notr="true">/* Estilo Base del botón plano (flat) */
+QPushButton {
+    /* Mantiene el texto visible */
+    color: white;
+    /* Asegura que no tenga bordes 3D */
+    border: none;
+    /* Fondo transparente cuando está inactivo */
+    background-color: transparent;
+	text-align:left;
+	color:lightgrey
+}
+
+/* Estilo al pasar el ratón (Hover) */
+QPushButton:hover {
+    /* Aquí definimos el cambio visual */
+    background-color: #34495e; /* Gris claro sutil */
+    /*  border: 1px solid #B0B0B0; Le añade un borde sutil solo al pasar el ratón */
+}</string>
          </property>
          <property name="text">
           <string>Horarios</string>
+         </property>
+         <property name="default">
+          <bool>false</bool>
          </property>
          <property name="flat">
           <bool>true</bool>
@@ -175,11 +262,33 @@ color:lightgrey;</string>
            <pointsize>12</pointsize>
           </font>
          </property>
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="styleSheet">
           <string notr="true">color:white;</string>
          </property>
          <property name="text">
           <string>Agregar un Ciclo</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButton">
+         <property name="font">
+          <font>
+           <pointsize>12</pointsize>
+          </font>
+         </property>
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color:red;
+color:white;</string>
+         </property>
+         <property name="text">
+          <string>Eliminar este ciclo</string>
          </property>
         </widget>
        </item>
@@ -253,6 +362,9 @@ color:lightgrey;</string>
              </property>
              <item>
               <widget class="QPushButton" name="btn_agregar_profe">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Agregar Profesor</string>
                </property>
@@ -260,6 +372,9 @@ color:lightgrey;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_editar_profe">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Editar Profesor</string>
                </property>
@@ -267,6 +382,9 @@ color:lightgrey;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_borrar_profe">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Borrar Profesor</string>
                </property>
@@ -393,6 +511,9 @@ color:lightgrey;</string>
              </property>
              <item>
               <widget class="QPushButton" name="btn_agregar_modulo">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Agregar Modulo</string>
                </property>
@@ -400,6 +521,9 @@ color:lightgrey;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_editar_modulo">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Editar Modulo</string>
                </property>
@@ -407,6 +531,9 @@ color:lightgrey;</string>
              </item>
              <item>
               <widget class="QPushButton" name="btn_eliminar_modulo">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
                <property name="text">
                 <string>Eliminar Modulo</string>
                </property>
@@ -421,6 +548,11 @@ color:lightgrey;</string>
                <string>1</string>
               </property>
              </row>
+             <column>
+              <property name="text">
+               <string>Nombre</string>
+              </property>
+             </column>
              <column>
               <property name="text">
                <string>Nombre</string>
@@ -500,7 +632,7 @@ color:lightgrey;</string>
               <bool>true</bool>
              </property>
              <property name="dragDropMode">
-              <enum>QAbstractItemView::DragDrop</enum>
+              <enum>QAbstractItemView::InternalMove</enum>
              </property>
              <property name="selectionMode">
               <enum>QAbstractItemView::SingleSelection</enum>
@@ -520,6 +652,26 @@ color:lightgrey;</string>
                <string>10:00</string>
               </property>
              </row>
+             <row>
+              <property name="text">
+               <string>10:30</string>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string>11:30</string>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string>12:30</string>
+              </property>
+             </row>
+             <row>
+              <property name="text">
+               <string>13:30</string>
+              </property>
+             </row>
              <column>
               <property name="text">
                <string>Lunes</string>
@@ -532,7 +684,7 @@ color:lightgrey;</string>
              </column>
              <column>
               <property name="text">
-               <string>Martes</string>
+               <string>Miercoles</string>
               </property>
              </column>
              <column>
@@ -566,7 +718,7 @@ color:lightgrey;</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>830</width>
+     <width>1033</width>
      <height>26</height>
     </rect>
    </property>
