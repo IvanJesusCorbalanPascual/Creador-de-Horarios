@@ -35,8 +35,8 @@ class GestorPreferencias:
 
     def comprobar_conflicto(self, profesor_id, dia, hora_inicio, hora_fin):
         # Si esta vacio las preferencias, lo rellena primero
-        if not self.cache_preferencias:
-            self.cargar_preferencias()
+        #if not self.cache_preferencias:
+            #self.cargar_preferencias()
 
         conflicto_actual = 0 # Por defecto, asume que no hay conflictos
 

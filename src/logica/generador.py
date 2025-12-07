@@ -1,0 +1,227 @@
+import sys 
+import os
+import random
+
+# Bloque para detectar las rutas correctamente
+ruta_actual = os.path.dirname(os.path.abspath(__file__))
+ruta_raiz = os.path.abspath(os.path.join(ruta_actual, '..', '..'))
+sys.path.append(ruta_raiz)
+
+from src.bd.bd_manager import db
+from src.logica.gestor_preferencias import GestorPreferencias
+from src.logica.validador import Validador
+
+class GeneradorAutomatico:
+    def __init__(self):
+        print("Inicializando el generador...")
+
+        # Estas son nuestras herramientas
+        self.db = db
+        self.gest_pref = GestorPreferencias()
+        self.validador = Validador()
+
+        self.profesores = []
+        self.modulos = []
+
+        # Aqui se guarda el horario generado
+        self.profesores_por_modulo = {}
+
+        # Evita duplicados
+        self.asignaciones = {}
+
+
+    # Descarga los datos de Supabase antes de empezar
+    def preparar_datos_supabase(self):
+        print("Descargando los datos necesarios de Supabase...")
+
+        # Carga los datos
+        self.profesores = self.db.obtener_profesores()
+        self.modulos = self.db.obtener_modulos()
+
+        # Carga las preferencias
+        self.gest_pref.cargar_preferencias()
+
+        if not self.profesores or not self.modulos:
+            print("Error: No se han encontrado profesores o módulos en la base de datos")
+            return False
+        
+        # Mapa de nombres a IDs
+        self.mapa_nombres_ids = {p['nombre']: p['id'] for p in self.profesores}
+        
+        try:
+            for modulo in self.modulos:
+                self.profesores_por_modulo[modulo['id']] = []
+
+            # Limpia asignaciones previas
+            self.asignaciones = {}
+            
+        except Exception as e:
+            print(f"Error, No se han podido cargar las competencias: {e} ")
+            return False
+        
+        print(f"Los datos se han encontrado y preparado correctamente. Competencias cargadas para: {len(self.profesores_por_modulo)} asignaturas.")
+        return True
+        
+    # Comprueba que todo carga al ejecutarse
+    def ejecutar(self):
+        carga_exitosa = self.preparar_datos_supabase()
+        if not carga_exitosa:
+            return
+        
+        print("Comenzando generación automática...")
+
+        exito = self.calcular_distribucion(ignorar_preferencias_leves=False)
+
+        if not exito:
+            print("Ha habido un conflicto con preferencias personales (2).")
+            print("Reintentando teniendo en cuenta solo restricciones obligatorias (1)")
+
+            # Limpia completamente para intentarlo de nuevo
+            self.asignaciones = {}
+            for modulo in self.modulos:
+                self.profesores_por_modulo[modulo['id']] = []
+
+            # Ignora las preferencias leves en el 2º intento
+            if self.calcular_distribucion(ignorar_preferencias_leves=True):
+                print("Horario generado exitosamente, han sido ignoradas las preferencias leves.")
+            else:
+                print("No ha sido posible generar el horario, se han encontrado conflictos críticos.")
+        else:
+            print("¡Horario generado exitosamente!")
+            self.guardar_cambios()
+
+
+    def guardar_cambios(self):
+        print("Guardando los resultados en Supabase..")
+        
+        datos_para_insertar = []
+
+        # Recorre el resultado en la memoria
+        for modulo_id, clases in self.profesores_por_modulo.items():
+            for clase in clases:
+                # Convierte el numero de horas a hora real
+                h_inicio, h_fin = self.convertir_indice_a_hora(clase['hora'])
+                
+                fila = {
+                    "modulo_id": modulo_id,
+                    "dia_semana": clase['dia'],
+                    "hora_inicio": h_inicio,
+                    "hora_fin": h_fin,
+                    "profesor_id": clase['profesor_id']
+                }
+                datos_para_insertar.append(fila)
+
+        if datos_para_insertar:
+            error = self.db.guardar_horarios_generados(datos_para_insertar)
+            if not error:
+                print(f"Han sido guardadas exitosamente {len(datos_para_insertar)} clases en la base de datos.")
+            else:
+                print(f"Error al guardar en la base de datos: {error}")
+
+    # Ayuda en el ordenamiento
+    def obtener_horas_para_ordenar(self, modulo):
+        return modulo['horas_semanales']
+    
+    # Traduce los numeros a horas reales para comparar con las preferencias
+    def convertir_indice_a_hora(self, indice):
+        mapa = {
+            1: ("08:00:00", "09:00:00"),
+            2: ("09:00:00", "10:00:00"),
+            3: ("10:00:00", "11:00:00"),
+            4: ("11:30:00", "12:30:00"),
+            5: ("12:30:00", "13:30:00"),
+            6: ("13:30:00", "14:30:00")
+        }
+        return mapa.get(indice, ("00:00:00", "00:00:00"))
+       
+    def calcular_distribucion(self, ignorar_preferencias_leves):
+        dias_semana = [0, 1, 2, 3, 4]
+        horas_lectivas = [1, 2, 3, 4, 5, 6]
+
+        # Ordena de mayor a menor colocando primero las asignaturas grandes
+        modulos_ordenados = sorted(self.modulos, key=self.obtener_horas_para_ordenar, reverse=True)
+
+        for modulo in modulos_ordenados:
+            horas_pendientes = modulo['horas_semanales']
+            # Traduce nombre a ID
+            nombre_profesor_string = modulo['profesor_asignado']
+            
+            # Lo salta si es cualquiera de las 3
+            if not nombre_profesor_string or nombre_profesor_string in ["EMPTY", "NULL", "None"]:
+                continue
+
+            # Busca el ID númerico usando el mapa
+            if nombre_profesor_string in self.mapa_nombres_ids:
+                profesor_id = self.mapa_nombres_ids[nombre_profesor_string]
+            else:
+                print(f"Advertencia: Me salto '{modulo['nombre']}' porque el profesor '{nombre_profesor_string}' no está en la lista de profesores")
+                print(f"   (Los profesores disponibles: {list(self.mapa_nombres_ids.keys())})")
+                # Si no encuentra el nombre en la tabla profesores, salta
+                continue
+
+            intentos_sin_exito = 0
+            while horas_pendientes > 0:
+                asignado = False
+                # Prueba días aleatorios para hacerlo variado
+                random.shuffle(dias_semana)
+
+                for dia in dias_semana:
+                    if horas_pendientes == 0: break
+
+                    # Valida el máximo de horas diarias
+                    horas_hoy = self.contar_horas_modulo_dia(modulo['id'], dia)
+                    if horas_hoy >= modulo.get('horas_max_dia', 2):
+                        continue
+
+                    for hora in horas_lectivas:
+                        # Valida si el profesor esta ocupado
+                        ocupado = (profesor_id, dia, hora)
+                        if ocupado in self.asignaciones:
+                            continue
+                        
+                        # Traduce en numero de hora a String
+                        h_inicio, h_fin = self.convertir_indice_a_hora(hora)
+
+                        nivel_de_conflicto = self.gest_pref.comprobar_conflicto(profesor_id, dia, h_inicio, h_fin)
+
+                        # Salta si el nivel de conflicto es 1
+                        if nivel_de_conflicto == 1:
+                            continue
+
+                        # Siendo preferencia, salta solo si no estamos ignorandolas
+                        if nivel_de_conflicto == 2 and not ignorar_preferencias_leves:
+                            continue
+
+                        # Asigna los huecos
+                        self.asignaciones[ocupado] = modulo['id']
+
+                        bloque = {'dia': dia, 'hora': hora, 'profesor_id': profesor_id}
+                        self.profesores_por_modulo[modulo['id']].append(bloque)
+
+                        horas_pendientes -= 1
+                        asignado = True
+                        break
+
+                if not asignado:
+                    intentos_sin_exito += 1
+                    # Si falla muchas veces + de 20, cancela el intento
+                    if intentos_sin_exito > 20:
+                        print(f"Error al asignar: {modulo['nombre']} Profesor ID: {profesor_id}")
+                        return False
+        return True
+    
+    def contar_horas_modulo_dia(self, modulo_id, dia):
+        # Cuenta cuantas horas lleva ya  este modulo en este día
+        count = 0
+        if modulo_id in self.profesores_por_modulo:
+            for clase in self.profesores_por_modulo[modulo_id]:
+                if clase['dia'] == dia:
+                    count += 1
+        return count
+
+# --- Zona de pruebas ---
+if __name__ == "__main__":
+    generador = GeneradorAutomatico()
+    generador.ejecutar()
+
+    

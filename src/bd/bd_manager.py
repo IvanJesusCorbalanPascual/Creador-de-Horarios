@@ -3,7 +3,7 @@ from supabase import create_client, Client
 
 # CONSTANTES
 URL = "https://lvcrigxkcyyeqbqfgruo.supabase.co"
-KEY = "sb_publishable_AghBIqMcP2jEpnT2DiGYUA_2U2dLRy3"
+KEY = "sb_secret_b_o0X_MZDs9IWdxSs-kuHA_W5mNG5dX"
 
 class DBManager:
     def __init__(self):
@@ -194,6 +194,21 @@ class DBManager:
         except Exception as e:
             print(f"Error al obtener el horario generado: {e}")
             return []
+        
+    def guardar_horarios_generados(self, lista_horarios):
+        try:
+            # Borra todos los horarios anteriores que no tengan id 0 para evitar duplicados
+            self.client.table("horario_generado").delete().neq("id", 0).execute()
+
+            # Inserta los nuevos horarios
+            if lista_horarios:
+                self.client.table("horario_generado").insert(lista_horarios).execute()
+            
+            return None
+        
+        except Exception as e:
+            print(f"Error crítico al intentar guardar los horarios: {e}")
+            return str(e)
 
 # Instancia única para usar en el resto del programa
 db = DBManager()
