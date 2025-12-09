@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView, QAbstractItemView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView, QComboBox, QLabel, QVBoxLayout, QAbstractItemView
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5 import uic
@@ -37,6 +37,43 @@ class DialogoProfesor(QDialog):
             self.sb_horas_max_semana.setValue(profesor.horas_max_semana)
 
 
+        # --- NUEVO: Selector de Ciclo ---
+        # Añadimos programaticamente un layout para el selector de ciclos si estamos creando
+        if not self.profesor:
+            # Buscamos el layout principal. Si el .ui no tiene uno en el QDialog, esto podria fallar o necesitar ajustes.
+            # Asumimos que hay un layout, o insertamos en el layout del contenedor 'top-level'
+            
+            # Obtener ciclos de la BD
+            self.ciclos_db = db.obtener_ciclos()
+            
+            if self.ciclos_db:
+                self.lbl_ciclo = QLabel("Asignar a Ciclo:", self)
+                self.combo_ciclo_nuevo = QComboBox(self)
+                self.combo_ciclo_nuevo.addItem("Ninguno", None)
+                
+                index_default = 0
+                for i, c in enumerate(self.ciclos_db):
+                    self.combo_ciclo_nuevo.addItem(c['nombre'], c['id'])
+                    # Si habiamos pasado un ciclo_id por defecto, lo preseleccionamos
+                    if self.ciclo_id and c['id'] == self.ciclo_id:
+                        index_default = i + 1 # +1 por el "Ninguno"
+                
+                self.combo_ciclo_nuevo.setCurrentIndex(index_default)
+
+                # Intentamos añadirlo al layout existente
+                if self.layout():
+                     # Insertar antes de los botones (que suelen estar al final)
+                     # Si es un QVBoxLayout, insertWidget(-1) o insertWidget(count-1)
+                     cnt = self.layout().count()
+                     self.layout().insertWidget(cnt - 1, self.lbl_ciclo)
+                     self.layout().insertWidget(cnt - 1, self.combo_ciclo_nuevo)
+                else:
+                    # Fallback si no hay layout (raro en .ui bien hecho)
+                    layout = QVBoxLayout()
+                    layout.addWidget(self.lbl_ciclo)
+                    layout.addWidget(self.combo_ciclo_nuevo)
+                    self.setLayout(layout)
+
         # Conectar botones (Aceptar y Cancelar)
         self.buttonBox.accepted.connect(self.aceptar)
         self.buttonBox.rejected.connect(self.reject)
@@ -62,14 +99,26 @@ class DialogoProfesor(QDialog):
             exito = self.profesor_manager.update_profesor(self.profesor)
         else:
             # Nuevo
-            # Constructor: Profesor(id, nombre, horas_max_dia, horas_max_semana)
-            nuevo_profe = Profesor(None, nombre, h_dia, h_sem)
+            # Constructor: Profesor(id, nombre, color_hex, horas_max_dia, horas_max_semana)
+            import random
+            color_random = "#{:06x}".format(random.randint(0, 0xFFFFFF))
+            nuevo_profe = Profesor(None, nombre, color_random, h_dia, h_sem)
             nuevo_id = self.profesor_manager.add_profesor(nuevo_profe)
             exito = nuevo_id is not None
             
-            # Si se creo exitosamente y tenemos un ciclo seleccionado, lo asignamos
-            if exito and self.ciclo_id:
-                self.profesor_manager.assign_profesor_to_cycle(nuevo_id, self.ciclo_id)
+            # Si se creo exitosamente y tenemos seleccion de ciclo
+            if exito:
+                # Verificar si se seleccionó un ciclo en el combo
+                ciclo_selec_id = None
+                if hasattr(self, 'combo_ciclo_nuevo'):
+                    ciclo_selec_id = self.combo_ciclo_nuevo.currentData()
+                
+                # Si no, usar el que venia por defecto (fallback)
+                if not ciclo_selec_id and self.ciclo_id:
+                    ciclo_selec_id = self.ciclo_id
+                    
+                if ciclo_selec_id:
+                    self.profesor_manager.assign_profesor_to_cycle(nuevo_id, ciclo_selec_id)
         
         if exito:
             self.accept() # Cierra el dialogo con exito
