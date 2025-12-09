@@ -2,13 +2,151 @@ import sys
 import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView, QComboBox, QLabel, QVBoxLayout, QAbstractItemView
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QIcon
 from PyQt5 import uic
-from src.logica.profesor_manager import ProfesorManager # Importa la logica
 from src.modelos.modelos import Profesor # Importa el modelo
 from src.bd.bd_manager import db
+from src.logica.profesor_manager import ProfesorManager
 from src.logica.modulo_manager import ModuloManager
+from src.logica.ciclo_manager import CicloManager
 from src.logica.generador import GeneradorAutomatico
+
+# --- CONSTANTES ---
+# Estilo visual CSS "Green Tonic"
+GREEN_TONIC_STYLE = """
+/* --- Estilo Base (Fondo General) --- */
+QMainWindow, QDialog {
+    background-color: #f0f7f4;
+}
+
+/* --- Botones Generales (Por defecto) --- */
+QPushButton {
+    background-color: #2e7d32;
+    color: white;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid #1b5e20;
+}
+QPushButton:hover {
+    background-color: #43a047;
+    border: 1px solid #2e7d32;
+}
+QPushButton:pressed {
+    background-color: #1b5e20;
+    padding-top: 10px;
+    padding-bottom: 6px;
+}
+
+/* --- Botones Superiores (Acciones Principales: Agregar/Editar/Preferencias) --- */
+/* AQUI ESTABA EL ERROR: Faltaba añadir #btn_preferencias a la lista */
+QPushButton#btn_agregar_modulo, QPushButton#btn_editar_modulo, 
+QPushButton#btn_agregar_profe, QPushButton#btn_editar_profe,
+QPushButton#btn_preferencias {
+    background-color: #f0f7f4; /* O 'white' si prefieres contraste total */
+    color: #2e7d32; /* Texto verde */
+    border: 2px solid #2e7d32; /* Borde verde más grueso */
+    font-size: 14px;
+}
+
+/* --- HOVER para Botones Superiores --- */
+QPushButton#btn_agregar_modulo:hover, QPushButton#btn_editar_modulo:hover,
+QPushButton#btn_agregar_profe:hover, QPushButton#btn_editar_profe:hover,
+QPushButton#btn_preferencias:hover {
+    border: 3px solid #43a047; /* Un borde un poco más grueso al pasar el ratón */
+    background-color: #e8f5e9; /* Un fondo verde muy suave opcional */
+}
+
+/* --- ESTADO PRESSED (Al hacer clic) --- */
+QPushButton#btn_agregar_modulo:pressed, QPushButton#btn_editar_modulo:pressed,
+QPushButton#btn_agregar_profe:pressed, QPushButton#btn_editar_profe:pressed, 
+QPushButton#btn_preferencias:pressed {
+    background-color: #1b5e20; /* Color oscuro al presionar */
+    color: white; /* Texto blanco para que se lea bien */
+}
+
+/* --- Botones de Acción Peligrosa (Eliminar/Borrar) --- */
+QPushButton#btn_eliminar_modulo, QPushButton#btn_borrar_profe, QPushButton[text="Eliminar este ciclo"] {
+    background-color: #ffebee; 
+    color: #c62828; 
+    border: 2px solid #c62828;
+    margin: 5px;
+}
+QPushButton#btn_eliminar_modulo:hover, QPushButton#btn_borrar_profe:hover, QPushButton[text="Eliminar este ciclo"]:hover {
+    border: 3px solid #c62828;
+    background-color: #ffcdd2;
+}
+
+/* --- Tablas (QTableWidget) --- */
+QTableWidget {
+    background-color: white;
+    alternate-background-color: #f1f8e9; 
+    gridline-color: #c8e6c9;
+    border: 1px solid #81c784;
+    border-radius: 4px;
+}
+QHeaderView::section {
+    background-color: #2e7d32;
+    color: white;
+    padding: 8px;
+    border: none;
+    font-weight: bold;
+    font-size: 14px;
+}
+QTableWidget::item {
+    padding: 5px;
+}
+QTableWidget::item:selected {
+    background-color: #a5d6a7; 
+    color: #1b5e20;
+}
+
+/* --- Menú Lateral (Botones de Navegación) --- */
+QPushButton#btn_profesores, QPushButton#btn_modulos, QPushButton#btn_horarios {
+    background-color: #263238; 
+    color: #eceff1;
+    text-align: left;
+    padding-left: 20px;
+    border: none;
+    border-radius: 0px;
+    font-size: 16px;
+    height: 50px;
+    margin: 0px;
+}
+QPushButton#btn_profesores:checked, QPushButton#btn_modulos:checked, QPushButton#btn_horarios:checked {
+    background-color: #2e7d32; 
+    color: white;
+    border-left: 6px solid #aed581; 
+    font-weight: bold;
+}
+QPushButton#btn_profesores:hover, QPushButton#btn_modulos:hover, QPushButton#btn_horarios:hover {
+    background-color: #37474f; 
+}
+
+/* --- Inputs y Combos --- */
+QLineEdit, QComboBox, QSpinBox, QTimeEdit {
+    border: 2px solid #a5d6a7; 
+    border-radius: 6px;
+    padding: 6px;
+    background-color: white;
+    font-size: 14px;
+}
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QTimeEdit:focus {
+    border: 2px solid #2e7d32; 
+}
+
+/* --- Títulos y Etiquetas --- */
+QLabel {
+    color: #263238;
+    font-size: 18px; /* Un tamaño base más razonable, títulos aparte */
+}
+QLabel#label_titulo, QLabel[text^="Modulos de"], QLabel[text^="Tabla de Profesores"], QLabel[text^="Horario de"] { 
+    font-size: 22px;
+    font-weight: bold;
+    color: #1b5e20;
+}
+"""
 
 # Reemplazando las credenciales reales de Supabase/PostgreSQL en forma de dict
 DB_CONFIG = {
@@ -127,30 +265,55 @@ class DialogoProfesor(QDialog):
 
 class DialogoModulo(QDialog):
     # Ventana para Crear/Editar Módulos
-    def __init__(self, parent=None, datos_modulo=None, ciclo_id=None):
+    def __init__(self, parent=None, datos_modulo=None, ciclo_id=None, lista_profesores=[]):
         super().__init__(parent)
         # Carga el archivo UI que diseñes para módulos
         uic.loadUi(os.path.join("src", "ui", "modulo_form.ui"), self)
         
         self.datos_modulo = datos_modulo
         self.ciclo_id = ciclo_id
-        self.setWindowTitle("Editar Módulo" if datos_modulo else "Agregar Módulo")
 
-        # Pre-llenar datos si estamos editando
-        if self.datos_modulo:
-            self.le_nombre.setText(str(self.datos_modulo['nombre']))
-            self.sb_horas_max_semana.setValue(int(self.datos_modulo['horas_semanales']))
-            self.sb_horas_max_dia.setValue(int(self.datos_modulo['horas_max_dia']))
-            self.le_profesor.setText(str(self.datos_modulo['profesor_asignado']))
+        self.combo_profe.clear()
+        self.combo_profe.addItem("Sin Asignar", None)
+
+        # ID del profesor que tiene el módulo actualmente (si estamos editando)
+        id_actual = str(datos_modulo.get('profesor_id')) if datos_modulo and datos_modulo.get('profesor_id') else None
+
+        index_a_seleccionar = 0
+
+        for i, profe in enumerate(lista_profesores):
+            # Lógica híbrida: Funciona si 'profe' es Objeto o Diccionario
+            if isinstance(profe, dict):
+                pid = profe.get('id')
+                nombre = profe.get('nombre')
+            else:
+                pid = getattr(profe, 'id', None)
+                nombre = getattr(profe, 'nombre', 'Desconocido')
+            self.combo_profe.addItem(nombre, pid)
+
+            if str(pid) == id_actual:
+                index_a_seleccionar = i + 1
+            if self.datos_modulo:
+                self.setWindowTitle("Editar Módulo")
+                self.le_nombre.setText(str(self.datos_modulo.get('nombre', '')))
+                self.sb_horas_max_semana.setValue(int(self.datos_modulo.get('horas_semanales', 0)))
+                self.sb_horas_max_dia.setValue(int(self.datos_modulo.get('horas_max_dia', 0)))
+                
+                # Seleccionar el profesor correcto
+                self.combo_profe.setCurrentIndex(index_a_seleccionar)
+            else:
+                self.setWindowTitle("Agregar Módulo")
+
 
     def obtener_datos(self):
+        profesor_id_seleccionado = self.combo_profe.currentData()
         # Devuelve un diccionario con lo que escribió el usuario
         return {
             "nombre": self.le_nombre.text().strip(),
             "horas_semanales": self.sb_horas_max_semana.value(),
             "horas_max_dia": self.sb_horas_max_dia.value(),
-            "profesor_asignado": self.le_profesor.text().strip(),
-            "ciclo_id": self.ciclo_id # Importante: asignamos el módulo al ciclo actual
+            "profesor_id": profesor_id_seleccionado,
+            "ciclo_id": self.ciclo_id 
         }
     
 class DialogoPreferencia(QDialog):
@@ -291,20 +454,26 @@ class MiAplicacion(QMainWindow):
         # Inicializamos la base de datos
         self.db = db
         self.modulo_manager = ModuloManager(self.db)
-        
+        icon_path = "src/media/logoGT.png"
+        self.setWindowIcon(QIcon(icon_path)) # Icono de ventana
         # Cargando la vista principal
         uic.loadUi("src/ui/horarios.ui", self) 
+        self.setWindowTitle("Gestor de Ciclos")
         self.profesor_manager = ProfesorManager(DB_CONFIG)
         self.cargar_ciclos_db() # Cargar ciclos al inicio
         self.btn_generar_auto.clicked.connect(self.ejecutar_generador)
+        self.ciclo_manager= CicloManager(self.db)
         self.configuracion_menu()
         self.cambiar_pagina(0) # Pagina por defecto (profesores) al abrir la apliacion
 
     def configuracion_menu(self):
+
         # Mapeo de Botones
         self.btn_profesores.clicked.connect(lambda: self.cambiar_pagina(0))
         self.btn_modulos.clicked.connect(lambda: self.cambiar_pagina(1))
         self.btn_horarios.clicked.connect(lambda: self.cambiar_pagina(2))
+        self.btn_agregar_ciclo.clicked.connect(self.agregar_nuevo_ciclo)
+        self.btn_eliminar_ciclo.clicked.connect(self.eliminar_ciclo_actual)
         
         # Conexiones de botones de Profesores
         self.btn_agregar_profe.clicked.connect(self.agregar_profesor)
@@ -320,6 +489,14 @@ class MiAplicacion(QMainWindow):
         # Al cambiar de Ciclo, recarga la pagina
         self.combo_ciclos.currentIndexChanged.connect(self.cambiar_ciclo)
 
+    # Funcion que marca el boton de la seccion actual
+    def set_active_tab(self, index):
+        self.cambiar_pagina(index)
+        # Visualmente marcar el botón
+        self.btn_profesores.setChecked(index == 0)
+        self.btn_modulos.setChecked(index == 1)
+        self.btn_horarios.setChecked(index == 2)
+
     def cambiar_pagina(self,index):
         self.stackedWidget.setCurrentIndex(index)
 
@@ -329,6 +506,33 @@ class MiAplicacion(QMainWindow):
             self.cargar_modulos()
         elif index == 2:
             self.cargar_horario()
+
+    def agregar_nuevo_ciclo(self):
+        nombre = self.le_ciclo.text()
+        if nombre:
+            if self.ciclo_manager.agregar_ciclo(nombre):
+                self.le_ciclo.clear() # Limpia el LineEdit
+                self.cargar_ciclos_db()      # Recarga la lista
+                QMessageBox.information(self, "Listo", "Ciclo creado.")
+            else:
+                QMessageBox.warning(self, "Error", "No se pudo crear el ciclo.")
+
+    def eliminar_ciclo_actual(self):
+        id_ciclo = self.combo_ciclos.currentData()
+        
+        # Si no hay ciclo seleccionado, no hacemos nada
+        if not id_ciclo: return
+
+        # Confirmación rápida
+        respuesta = QMessageBox.question(
+            self, "Borrar", "¿Seguro que quieres borrar este ciclo y sus datos?",
+            QMessageBox.Yes | QMessageBox.No
+        )
+
+        if respuesta == QMessageBox.Yes:
+            self.ciclo_manager.eliminar_ciclo(id_ciclo)
+            self.cargar_ciclos_db() # Actualiza la lista
+            QMessageBox.information(self, "Listo", "Ciclo eliminado.")
 
     def cambiar_ciclo(self):
         ciclo_actual = self.combo_ciclos.currentText()
@@ -350,7 +554,8 @@ class MiAplicacion(QMainWindow):
     # Metodos para cargar las vistas
     def cargar_profesores(self):
         print("cargando profesores...")
-        
+        nombre_ciclo = self.combo_ciclos.currentText()
+        self.lbl_ciclo_profesor.setText(nombre_ciclo)
         # Obtener ID del ciclo seleccionado
         ciclo_id = self.combo_ciclos.currentData()
         
@@ -491,8 +696,9 @@ class MiAplicacion(QMainWindow):
             QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido primero")
             return
 
+        lista_profesores = self.profesor_manager.get_profesores_by_ciclo_id(ciclo_id)
         # 2. Abrimos el diálogo pasándole el ciclo_id
-        dialogo = DialogoModulo(self, ciclo_id=ciclo_id)
+        dialogo = DialogoModulo(self, ciclo_id=ciclo_id, lista_profesores=lista_profesores)
         
         if dialogo.exec_() == QDialog.Accepted:
             datos = dialogo.obtener_datos()
@@ -517,34 +723,37 @@ class MiAplicacion(QMainWindow):
             return
 
         # Recuperar datos de la tabla para pre-llenar el formulario
-        id_modulo = self.tabla_modulos.item(fila, 0).text()
+        item_id_modulo = self.tabla_modulos.item(fila, 0)
+        id_modulo = item_id_modulo.data(Qt.UserRole) # ID real para la DB
         nombre = self.tabla_modulos.item(fila, 1).text()
         h_sem = self.tabla_modulos.item(fila, 2).text()
         h_dia = self.tabla_modulos.item(fila, 3).text()
-        
-        # Empaquetamos en un dict temporal
-        profesor_asignado = self.tabla_modulos.item(fila, 4).text() if self.tabla_modulos.item(fila, 4) else ""
+
+        item_profe = self.tabla_modulos.item(fila, 4)
+        profesor_id = item_profe.data(Qt.UserRole) # Recuperamos el id
+
         datos_actuales = {
             'nombre': nombre,
             'horas_semanales': h_sem,
             'horas_max_dia': h_dia,
-            'profesor_asignado': profesor_asignado
+            'profesor_id': profesor_id # Se lo pasamos al diálogo
         }
-        
-        # Recuperamos ciclo_id por si acaso (aunque al editar no solemos cambiarlo de ciclo aquí)
+
+        # 4. Preparar y abrir diálogo
         ciclo_id = self.combo_ciclos.currentData()
 
-        # Abrir diálogo
-        dialogo = DialogoModulo(self, datos_modulo=datos_actuales, ciclo_id=ciclo_id)
-        
+        # Pedimos TODOS los profesores para llenar el combo
+        lista_profesores = self.profesor_manager.get_profesores_by_ciclo_id(ciclo_id)
+
+        dialogo = DialogoModulo(self, datos_modulo=datos_actuales, ciclo_id=ciclo_id, lista_profesores=lista_profesores)
+
         if dialogo.exec_() == QDialog.Accepted:
             nuevos_datos = dialogo.obtener_datos()
-            
-            # Actualizar
             if self.modulo_manager.editar_modulo(id_modulo, nuevos_datos):
-                self.cargar_modulos()
+                self.cargar_modulos() # Recargar tabla para ver cambios
+                QMessageBox.information(self, "Éxito", "Módulo actualizado correctamente")
             else:
-                QMessageBox.critical(self, "Error", "Fallo al actualizar el módulo")
+                QMessageBox.critical(self, "Error", "No se pudo actualizar")
 
     def borrar_modulo(self):
         # Elimina el módulo seleccionado
@@ -577,18 +786,22 @@ class MiAplicacion(QMainWindow):
  
     def cargar_modulos(self):
         print("cargando modulos...")
-        ciclo_actual = self.combo_ciclos.currentText()
+        nombre_ciclo = self.combo_ciclos.currentText()
+        self.lbl_ciclo_modulos.setText(nombre_ciclo)
+        ciclo_actual = self.combo_ciclos.currentData()
         # llamada a la tabla_modulos en tu UI
         if hasattr(self, 'tabla_modulos'):
              self.modulo_manager.cargar_modulos_en_tabla(self.tabla_modulos, ciclo_actual)
              self.tabla_modulos.resizeColumnsToContents()
-             self.tabla_modulos.resizeRowsToContents()
+             self.tabla_modulos.horizontalHeader().setVisible(True)
              self.tabla_modulos.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         else:
              print("Error: No se encontro la tabla 'tabla_modulos' en la UI")
  
     def cargar_horario(self):
         print("Cargando horarios...")
+        nombre_ciclo = self.combo_ciclos.currentText()
+        self.lbl_ciclo_horario.setText(nombre_ciclo)
         
         # Comprueba que ciclo quiero ver el usuario
         ciclo_actual_id = self.combo_ciclos.currentData()
@@ -660,6 +873,11 @@ class MiAplicacion(QMainWindow):
                 # Inserta todo en la tabla
                 self.tabl_horario_grid.setItem(fila, dia, item)
 
+                # Ajustando el horario a la pantalla
+                self.tabl_horario_grid.resizeColumnsToContents()
+                self.tabl_horario_grid.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+                self.tabl_horario_grid.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
             except Exception as e:
                 print(f"Error al rellenar una celda: {e}")
 
@@ -693,7 +911,7 @@ class MiAplicacion(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyleSheet(GREEN_TONIC_STYLE)
     window = MiAplicacion()
     window.show()
     app.exec_()
-

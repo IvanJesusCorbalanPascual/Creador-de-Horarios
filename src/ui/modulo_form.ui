@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>385</width>
-    <height>320</height>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -85,11 +85,7 @@
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QLineEdit" name="le_profesor">
-        <property name="placeholderText">
-         <string>Nombre del profesor...</string>
-        </property>
-       </widget>
+       <widget class="QComboBox" name="combo_profe"/>
       </item>
      </layout>
     </widget>

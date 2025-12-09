@@ -1,39 +1,53 @@
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QComboBox
 from src.modelos.modelos import Modulo
-
+from PyQt5.QtCore import Qt
 
 class ModuloManager:
     def __init__(self, bd):
         self.bd = bd
 
-    def cargar_modulos_en_tabla(self, tabla_widget, nombre_ciclo_seleccionado):
-        if not nombre_ciclo_seleccionado:
+    def cargar_modulos_en_tabla(self, tabla_widget, id_ciclo_seleccionado):
+        if not id_ciclo_seleccionado:
             return
-        
-        print(f"Cargando módulos para : {nombre_ciclo_seleccionado}...")
+        print(f"Cargando módulos")
 
-        datos = self.bd.obtener_modulos_por_ciclo(nombre_ciclo_seleccionado)
+        datos = self.bd.obtener_modulos_por_ciclo(id_ciclo_seleccionado)
         tabla_widget.setRowCount(0)
 
         if datos:
             for fila_idx, modulo in enumerate(datos):
                 tabla_widget.insertRow(fila_idx)
 
-                tabla_widget.setItem(fila_idx, 0, QTableWidgetItem(str(modulo['id'])))
+                # Columna 0: ID del modulo
+                item_id = QTableWidgetItem(str(modulo['id']))
+                item_id.setData(Qt.UserRole, modulo['id']) # Guardamos ID
+                tabla_widget.setItem(fila_idx, 0, item_id)
+
+                # Columna 1: Nombre
                 tabla_widget.setItem(fila_idx, 1, QTableWidgetItem(str(modulo['nombre'])))
+
+                # Columna 2: Horas Semanales
                 tabla_widget.setItem(fila_idx, 2, QTableWidgetItem(str(modulo['horas_semanales'])))
 
-                if 'horas_max_dia' in modulo:
-                    tabla_widget.setItem(fila_idx, 3, QTableWidgetItem(str(modulo['horas_max_dia'])))
+                # Columna 3: Horas Diarias
+                tabla_widget.setItem(fila_idx, 3, QTableWidgetItem(str(modulo['horas_max_dia'])))
 
-                valor_profe = modulo.get('profesor_id') or modulo.get('profesor_asignado') or ""
-                tabla_widget.setItem(fila_idx, 4, QTableWidgetItem(str(valor_profe)))
+                # Columna 4: Profesor
+                nombre_mostrar = modulo.get('nombre_profesor', "Sin Asignar")
+                id_profesor = modulo.get('profesor_id') # Puede ser un número o None
 
-            tabla_widget.setColumnHidden(0,True)
+                item_profe = QTableWidgetItem(nombre_mostrar)
+                # Guardamos el ID del profesor "escondido" en la celda
+                item_profe.setData(Qt.UserRole, id_profesor) 
+                
+                tabla_widget.setItem(fila_idx, 4, item_profe)
+            
+            # Ocultar la columna 0 si no queremos mostrar el ID del módulo
+            tabla_widget.setColumnHidden(0, True) 
             tabla_widget.resizeColumnsToContents()
 
         else:
-            print("No se encontraron módulos para este cilo")
+            print("No se encontraron módulos para este ciclo")
 
     def agregar_modulo(self, datos):
         # Recibe un diccionario con los datos y llama al metodo de la bd

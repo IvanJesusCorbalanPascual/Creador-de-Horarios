@@ -29,9 +29,10 @@ CREATE TABLE public.modulos (
   ciclo_id integer,
   horas_semanales integer NOT NULL,
   horas_max_dia integer DEFAULT 3,
-  profesor_asignado text,
+  profesor_id integer,
   CONSTRAINT modulos_pkey PRIMARY KEY (id),
-  CONSTRAINT modulos_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclos(id)
+  CONSTRAINT modulos_ciclo_id_fkey FOREIGN KEY (ciclo_id) REFERENCES public.ciclos(id),
+  CONSTRAINT modulos_profesor_id_fkey FOREIGN KEY (profesor_id) REFERENCES public.profesores(id)
 );
 CREATE TABLE public.preferencias (
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
