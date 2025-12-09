@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>847</width>
-    <height>702</height>
+    <width>1211</width>
+    <height>740</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -437,6 +437,16 @@ color:white;</string>
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="btn_preferencias">
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="text">
+                <string>Gestionar Preferencias</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="btn_borrar_profe">
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
@@ -450,6 +460,9 @@ color:white;</string>
            </item>
            <item>
             <widget class="QTableWidget" name="tabla_profesores">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
              <attribute name="verticalHeaderVisible">
               <bool>false</bool>
              </attribute>
@@ -602,6 +615,9 @@ color:white;</string>
            </item>
            <item>
             <widget class="QTableWidget" name="tabla_modulos">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
              <property name="gridStyle">
               <enum>Qt::SolidLine</enum>
              </property>
@@ -758,6 +774,15 @@ QPushButton:pressed {
            </item>
            <item>
             <widget class="QTableWidget" name="tabl_horario_grid">
+             <property name="minimumSize">
+              <size>
+               <width>800</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
              <property name="dragEnabled">
               <bool>true</bool>
              </property>
@@ -867,7 +892,7 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>847</width>
+     <width>1211</width>
      <height>26</height>
     </rect>
    </property>

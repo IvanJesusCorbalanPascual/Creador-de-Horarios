@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView, QComboBox, QLabel, QVBoxLayout, QAbstractItemView
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5 import uic
@@ -23,10 +23,10 @@ QMainWindow, QDialog {
 QPushButton {
     background-color: #2e7d32;
     color: white;
-    border-radius: 6px; /* Bordes un poco más redondeados */
+    border-radius: 6px;
     padding: 8px 16px;
     font-size: 14px;
-    font-weight: 600; /* Letra un poco más gruesa */
+    font-weight: 600;
     border: 1px solid #1b5e20;
 }
 QPushButton:hover {
@@ -35,45 +35,53 @@ QPushButton:hover {
 }
 QPushButton:pressed {
     background-color: #1b5e20;
-    padding-top: 10px; /* Pequeño efecto de pulsación */
+    padding-top: 10px;
     padding-bottom: 6px;
 }
 
-/* --- Botones Superiores (Acciones Principales: Agregar/Editar) --- */
-/* Usamos selectores por nombre de objeto si coinciden, o por defecto general */
+/* --- Botones Superiores (Acciones Principales: Agregar/Editar/Preferencias) --- */
+/* AQUI ESTABA EL ERROR: Faltaba añadir #btn_preferencias a la lista */
 QPushButton#btn_agregar_modulo, QPushButton#btn_editar_modulo, 
-QPushButton#btn_agregar_profe, QPushButton#btn_editar_profe {
+QPushButton#btn_agregar_profe, QPushButton#btn_editar_profe,
+QPushButton#btn_preferencias {
+    background-color: #f0f7f4; /* O 'white' si prefieres contraste total */
     color: #2e7d32; /* Texto verde */
     border: 2px solid #2e7d32; /* Borde verde más grueso */
     font-size: 14px;
 }
+
+/* --- HOVER para Botones Superiores --- */
 QPushButton#btn_agregar_modulo:hover, QPushButton#btn_editar_modulo:hover,
-QPushButton#btn_agregar_profe:hover, QPushButton#btn_editar_profe:hover {
-    border: 5px solid #43a047;
+QPushButton#btn_agregar_profe:hover, QPushButton#btn_editar_profe:hover,
+QPushButton#btn_preferencias:hover {
+    border: 3px solid #43a047; /* Un borde un poco más grueso al pasar el ratón */
+    background-color: #e8f5e9; /* Un fondo verde muy suave opcional */
 }
 
-/* --- ESTADO PRESSED (Opcional, para coherencia) --- */
+/* --- ESTADO PRESSED (Al hacer clic) --- */
 QPushButton#btn_agregar_modulo:pressed, QPushButton#btn_editar_modulo:pressed,
-QPushButton#btn_agregar_profe:pressed, QPushButton#btn_editar_profe:pressed {
+QPushButton#btn_agregar_profe:pressed, QPushButton#btn_editar_profe:pressed, 
+QPushButton#btn_preferencias:pressed {
     background-color: #1b5e20; /* Color oscuro al presionar */
+    color: white; /* Texto blanco para que se lea bien */
 }
 
 /* --- Botones de Acción Peligrosa (Eliminar/Borrar) --- */
-/* Tanto para el botón superior como el del menú lateral si lo hubiera */
 QPushButton#btn_eliminar_modulo, QPushButton#btn_borrar_profe, QPushButton[text="Eliminar este ciclo"] {
-    background-color: #ffebee; /* Fondo rojizo muy suave */
-    color: #c62828; /* Texto rojo */
+    background-color: #ffebee; 
+    color: #c62828; 
     border: 2px solid #c62828;
     margin: 5px;
 }
 QPushButton#btn_eliminar_modulo:hover, QPushButton#btn_borrar_profe:hover, QPushButton[text="Eliminar este ciclo"]:hover {
-    border: 5px solid #c62828;
+    border: 3px solid #c62828;
+    background-color: #ffcdd2;
 }
 
 /* --- Tablas (QTableWidget) --- */
 QTableWidget {
     background-color: white;
-    alternate-background-color: #f1f8e9; /* Filas alternas con un verde muy sutil */
+    alternate-background-color: #f1f8e9; 
     gridline-color: #c8e6c9;
     border: 1px solid #81c784;
     border-radius: 4px;
@@ -90,13 +98,13 @@ QTableWidget::item {
     padding: 5px;
 }
 QTableWidget::item:selected {
-    background-color: #a5d6a7; /* Color de selección suave */
+    background-color: #a5d6a7; 
     color: #1b5e20;
 }
 
 /* --- Menú Lateral (Botones de Navegación) --- */
 QPushButton#btn_profesores, QPushButton#btn_modulos, QPushButton#btn_horarios {
-    background-color: #263238; /* Gris azulado oscuro para el menú (contraste profesional) */
+    background-color: #263238; 
     color: #eceff1;
     text-align: left;
     padding-left: 20px;
@@ -107,31 +115,31 @@ QPushButton#btn_profesores, QPushButton#btn_modulos, QPushButton#btn_horarios {
     margin: 0px;
 }
 QPushButton#btn_profesores:checked, QPushButton#btn_modulos:checked, QPushButton#btn_horarios:checked {
-    background-color: #2e7d32; /* Se vuelve verde cuando está activo */
+    background-color: #2e7d32; 
     color: white;
-    border-left: 6px solid #aed581; /* Indicador visual a la izquierda */
+    border-left: 6px solid #aed581; 
     font-weight: bold;
 }
 QPushButton#btn_profesores:hover, QPushButton#btn_modulos:hover, QPushButton#btn_horarios:hover {
-    background-color: #37474f; /* Ligero cambio al pasar el mouse en el menú */
+    background-color: #37474f; 
 }
 
 /* --- Inputs y Combos --- */
-QLineEdit, QComboBox, QSpinBox {
-    border: 2px solid #a5d6a7; /* Borde más visible */
+QLineEdit, QComboBox, QSpinBox, QTimeEdit {
+    border: 2px solid #a5d6a7; 
     border-radius: 6px;
     padding: 6px;
     background-color: white;
     font-size: 14px;
 }
-QLineEdit:focus, QComboBox:focus, QSpinBox:focus {
-    border: 2px solid #2e7d32; /* Foco verde fuerte */
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QTimeEdit:focus {
+    border: 2px solid #2e7d32; 
 }
 
 /* --- Títulos y Etiquetas --- */
 QLabel {
     color: #263238;
-    font-size: 20px;
+    font-size: 18px; /* Un tamaño base más razonable, títulos aparte */
 }
 QLabel#label_titulo, QLabel[text^="Modulos de"], QLabel[text^="Tabla de Profesores"], QLabel[text^="Horario de"] { 
     font-size: 22px;
@@ -167,6 +175,43 @@ class DialogoProfesor(QDialog):
             self.sb_horas_max_semana.setValue(profesor.horas_max_semana)
 
 
+        # --- NUEVO: Selector de Ciclo ---
+        # Añadimos programaticamente un layout para el selector de ciclos si estamos creando
+        if not self.profesor:
+            # Buscamos el layout principal. Si el .ui no tiene uno en el QDialog, esto podria fallar o necesitar ajustes.
+            # Asumimos que hay un layout, o insertamos en el layout del contenedor 'top-level'
+            
+            # Obtener ciclos de la BD
+            self.ciclos_db = db.obtener_ciclos()
+            
+            if self.ciclos_db:
+                self.lbl_ciclo = QLabel("Asignar a Ciclo:", self)
+                self.combo_ciclo_nuevo = QComboBox(self)
+                self.combo_ciclo_nuevo.addItem("Ninguno", None)
+                
+                index_default = 0
+                for i, c in enumerate(self.ciclos_db):
+                    self.combo_ciclo_nuevo.addItem(c['nombre'], c['id'])
+                    # Si habiamos pasado un ciclo_id por defecto, lo preseleccionamos
+                    if self.ciclo_id and c['id'] == self.ciclo_id:
+                        index_default = i + 1 # +1 por el "Ninguno"
+                
+                self.combo_ciclo_nuevo.setCurrentIndex(index_default)
+
+                # Intentamos añadirlo al layout existente
+                if self.layout():
+                     # Insertar antes de los botones (que suelen estar al final)
+                     # Si es un QVBoxLayout, insertWidget(-1) o insertWidget(count-1)
+                     cnt = self.layout().count()
+                     self.layout().insertWidget(cnt - 1, self.lbl_ciclo)
+                     self.layout().insertWidget(cnt - 1, self.combo_ciclo_nuevo)
+                else:
+                    # Fallback si no hay layout (raro en .ui bien hecho)
+                    layout = QVBoxLayout()
+                    layout.addWidget(self.lbl_ciclo)
+                    layout.addWidget(self.combo_ciclo_nuevo)
+                    self.setLayout(layout)
+
         # Conectar botones (Aceptar y Cancelar)
         self.buttonBox.accepted.connect(self.aceptar)
         self.buttonBox.rejected.connect(self.reject)
@@ -192,14 +237,26 @@ class DialogoProfesor(QDialog):
             exito = self.profesor_manager.update_profesor(self.profesor)
         else:
             # Nuevo
-            # Constructor: Profesor(id, nombre, horas_max_dia, horas_max_semana)
-            nuevo_profe = Profesor(None, nombre, h_dia, h_sem)
+            # Constructor: Profesor(id, nombre, color_hex, horas_max_dia, horas_max_semana)
+            import random
+            color_random = "#{:06x}".format(random.randint(0, 0xFFFFFF))
+            nuevo_profe = Profesor(None, nombre, color_random, h_dia, h_sem)
             nuevo_id = self.profesor_manager.add_profesor(nuevo_profe)
             exito = nuevo_id is not None
             
-            # Si se creo exitosamente y tenemos un ciclo seleccionado, lo asignamos
-            if exito and self.ciclo_id:
-                self.profesor_manager.assign_profesor_to_cycle(nuevo_id, self.ciclo_id)
+            # Si se creo exitosamente y tenemos seleccion de ciclo
+            if exito:
+                # Verificar si se seleccionó un ciclo en el combo
+                ciclo_selec_id = None
+                if hasattr(self, 'combo_ciclo_nuevo'):
+                    ciclo_selec_id = self.combo_ciclo_nuevo.currentData()
+                
+                # Si no, usar el que venia por defecto (fallback)
+                if not ciclo_selec_id and self.ciclo_id:
+                    ciclo_selec_id = self.ciclo_id
+                    
+                if ciclo_selec_id:
+                    self.profesor_manager.assign_profesor_to_cycle(nuevo_id, ciclo_selec_id)
         
         if exito:
             self.accept() # Cierra el dialogo con exito
@@ -258,6 +315,137 @@ class DialogoModulo(QDialog):
             "profesor_id": profesor_id_seleccionado,
             "ciclo_id": self.ciclo_id 
         }
+    
+class DialogoPreferencia(QDialog):
+    def __init__(self, parent=None, profesor_id=None, nombre_profe=""):
+        super().__init__(parent)
+        # Carga el archivo UI
+        uic.loadUi(os.path.join("src", "ui", "preferencia_form.ui"), self)
+        self.profesor_id = profesor_id
+        self.setWindowTitle(f"Restricción para: {nombre_profe}")
+
+        self.buttonBox.accepted.connect(self.aceptar)
+        self.buttonBox.rejected.connect(self.reject)
+            
+    def aceptar(self):
+        # El indice del combobox de los días
+        dia_semana = self.cb_dia.currentIndex()
+
+        # Convierte a String las horas
+        hora_inicio = self.te_inicio.time().toString("HH:mm:ss")
+        hora_fin = self.te_fin.time().toString("HH:mm:ss")
+
+        # Mapea el combobox de tipo a la prioridad que corresponde
+        tipo_index = self.cb_tipo.currentIndex()
+        prioridad = 1 if tipo_index == 0 else 2
+
+        motivo = ""
+        if hasattr(self, 'le_motivo'):
+            motivo = self.le_motivo.text().strip()
+
+        # Valida que la hora de inicio no sea mayor o igual que la hora de fin
+        if hora_inicio >= hora_fin:
+            QMessageBox.warning(self, "Error", "La hora de inicio debe ser anterior a la de fin.")
+            return
+            
+        # Prepara los datos para supabase
+        datos = {
+            "profesor_id": self.profesor_id,
+            "dia_semana": dia_semana,
+            "hora_inicio": hora_inicio,
+            "hora_fin": hora_fin,
+            "nivel_prioridad": prioridad,
+            "motivo": motivo
+        }
+
+        res = db.agregar_preferencia(datos)
+
+        if res:
+            QMessageBox.information(self, "Éxito", "Se ha guardado la restricción correctamente.")
+            self.accept()
+        else:
+            QMessageBox.critical(self, "Error", "No se ha podido guardar la restricción en la BD.")
+
+class DialogoListaPreferencias(QDialog):
+    def __init__(self, parent=None, profesor_id=None, nombre_profe=""):
+        super().__init__(parent)
+        uic.loadUi(os.path.join("src", "ui", "lista_preferencias.ui"), self)
+        self.profesor_id = profesor_id
+
+        # Actualiza el título con el nombre del profesor
+        self.setWindowTitle(f"Gestionar: {nombre_profe}")
+        # Actualiza el label dentro del groupbox con eol nombre del profesor
+        if hasattr(self, 'lbl_nombre_profe'):
+            self.lbl_nombre_profe.setText(f"Restricciones de: {nombre_profe}")
+
+        # Configura la tabla
+        self.tabla_restricciones.setColumnCount(5)
+        self.tabla_restricciones.setHorizontalHeaderLabels(["Día", "Inicio", "Fin", "Prioridad", "Motivo"])
+        self.tabla_restricciones.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # Selecciona una fila entera
+        self.tabla_restricciones.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+        # Conexión con los botones
+        self.btn_nueva.clicked.connect(self.abrir_nueva_restriccion)
+        self.btn_borrar.clicked.connect(self.borrar_restriccion_seleccionada)
+        self.btn_cerrar.clicked.connect(self.reject)
+
+        # Carga los datos iniciales
+        self.cargar_datos()
+
+    def cargar_datos(self):
+        datos = db.obtener_preferencias(self.profesor_id)
+        self.tabla_restricciones.setRowCount(0)
+
+        # Almacena los dias de la semana
+        dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+
+        for fila, pref in enumerate(datos):
+            self.tabla_restricciones.insertRow(fila)
+
+            # Traducción del día de número a texto
+            dia_txt = dias_semana[pref['dia_semana']] if 0 <= pref['dia_semana'] < 5 else "Desconocido"
+            self.tabla_restricciones.setItem(fila, 0, QTableWidgetItem(dia_txt))
+
+            # Horas Inicio y Fin
+            self.tabla_restricciones.setItem(fila, 1, QTableWidgetItem(str(pref['hora_inicio'])))
+            self.tabla_restricciones.setItem(fila, 2, QTableWidgetItem(str(pref['hora_fin'])))
+
+            # Prioridades
+            prior_txt = "Obligatorio" if pref['nivel_prioridad'] == 1 else "Preferiblemente"
+            self.tabla_restricciones.setItem(fila, 3, QTableWidgetItem(prior_txt))
+
+            # Motivo
+            self.tabla_restricciones.setItem(fila, 4, QTableWidgetItem(str(pref['motivo'])))
+
+            # Guarda el ID real de cada fila 
+            self.tabla_restricciones.item(fila, 0).setData(Qt.UserRole, pref['id'])
+
+    def abrir_nueva_restriccion(self):
+        # Abre la ventana para añadir restricciones
+        dialogo = DialogoPreferencia(self, self.profesor_id, "Nueva Restricción")
+        if dialogo.exec_() == QDialog.Accepted:
+            # Recarga la lista al volver
+            self.cargar_datos()
+
+    def borrar_restriccion_seleccionada(self):
+        fila = self.tabla_restricciones.currentRow()
+        if fila < 0:
+            QMessageBox.warning(self, "Aviso", "Debes seleccionar una fila para borrar")
+            return
+        
+        # Recupera el ID real
+        id_pref = self.tabla_restricciones.item(fila, 0).data(Qt.UserRole)
+
+        confirm = QMessageBox.question(self, "ELIMINAR", "¿SEGURO que quieres eliminar esta restricción?", 
+                                        QMessageBox.Yes | QMessageBox.No)
+        
+        if confirm == QMessageBox.Yes:
+            if db.eliminar_preferencia(id_pref):
+                self.cargar_datos()
+            else:
+                QMessageBox.critical(self, "Error", "No ha sido posible eliminar")
+
 # --- Ventana Principal ---
 class MiAplicacion(QMainWindow):
     def __init__(self):
@@ -291,6 +479,7 @@ class MiAplicacion(QMainWindow):
         self.btn_agregar_profe.clicked.connect(self.agregar_profesor)
         self.btn_editar_profe.clicked.connect(self.editar_profesor)
         self.btn_borrar_profe.clicked.connect(self.borrar_profesor)
+        self.btn_preferencias.clicked.connect(self.gestionar_preferencias)
 
         # Conexiones de botones de Profesores
         self.btn_agregar_modulo.clicked.connect(self.agregar_modulo)
@@ -484,12 +673,27 @@ class MiAplicacion(QMainWindow):
         else:
             QMessageBox.warning(self, "Advertencia", "Selecciona un profesor para borrar")
 
+    def gestionar_preferencias(self):
+        # Obtiene la fila seleccionada
+        fila = self.tabla_profesores.currentRow()
+        if fila < 0:
+            QMessageBox.warning(self, "Advertencia", "Selecciona un profesor primero")
+            return
+        
+        # Obtiene el ID y el nombre
+        item_nombre = self.tabla_profesores.item(fila, 0)
+        profesor_id = item_nombre.data(Qt.UserRole)
+        nombre_profe = item_nombre.text()
+
+        dialogo = DialogoListaPreferencias(self, profesor_id, nombre_profe)
+        dialogo.exec_()
+
     def agregar_modulo(self):
         # 1. Obtenemos el ID del ciclo que se está viendo actualmente
         ciclo_id = self.combo_ciclos.currentData()
         
         if not ciclo_id:
-            QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido primero.")
+            QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido primero")
             return
 
         lista_profesores = self.profesor_manager.get_profesores_by_ciclo_id(ciclo_id)
@@ -508,7 +712,7 @@ class MiAplicacion(QMainWindow):
             if self.modulo_manager.agregar_modulo(datos):
                 self.cargar_modulos() # Refrescar la tabla
             else:
-                QMessageBox.critical(self, "Error", "No se pudo guardar el módulo.")
+                QMessageBox.critical(self, "Error", "No se pudo guardar el módulo")
 
     def editar_modulo(self):
         # Editar el módulo seleccionado en la tabla
@@ -598,7 +802,9 @@ class MiAplicacion(QMainWindow):
         print("Cargando horarios...")
         nombre_ciclo = self.combo_ciclos.currentText()
         self.lbl_ciclo_horario.setText(nombre_ciclo)
-
+        
+        # Comprueba que ciclo quiero ver el usuario
+        ciclo_actual_id = self.combo_ciclos.currentData()
         # Limpia la tabla visualmente
         self.tabl_horario_grid.clearContents()
 
@@ -621,6 +827,17 @@ class MiAplicacion(QMainWindow):
 
         for clase in datos:
             try:
+
+                # Si la clase no pertenece al ciclo seleccionado o no tiene módulo lo salta
+                if not clase.get('modulos'):
+                    continue
+
+                ciclo_clase = clase['modulos'].get('ciclo_id')
+
+                # Si el ID no coincide no lo rellena
+                if ciclo_clase != ciclo_actual_id:
+                    continue
+
                 # Extrae información básica
                 dia = clase['dia_semana']
                 hora = clase['hora_inicio']
@@ -656,6 +873,11 @@ class MiAplicacion(QMainWindow):
                 # Inserta todo en la tabla
                 self.tabl_horario_grid.setItem(fila, dia, item)
 
+                # Ajustando el horario a la pantalla
+                self.tabl_horario_grid.resizeColumnsToContents()
+                self.tabl_horario_grid.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+                self.tabl_horario_grid.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
             except Exception as e:
                 print(f"Error al rellenar una celda: {e}")
 
@@ -670,9 +892,13 @@ class MiAplicacion(QMainWindow):
 
         if respuesta == QMessageBox.Yes:
             try:
+
+                # Obtiene el ID de ciclo que se esta visualizando
+                ciclo_actual_id = self.combo_ciclos.currentData()
                 # Llama al generador y lo ejecuta
                 generador = GeneradorAutomatico()
-                generador.ejecutar()
+                # Al pasarle el ciclo_id solo toca ese curso
+                generador.ejecutar(ciclo_id=ciclo_actual_id)
 
                 # Refresca la vista
                 self.cargar_horario()
@@ -681,6 +907,7 @@ class MiAplicacion(QMainWindow):
 
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Se ha producido un error: {str(e)}")
+    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

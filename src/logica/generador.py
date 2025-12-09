@@ -33,23 +33,28 @@ class GeneradorAutomatico:
         self.ocupacion_grupos = {}
 
 
-    # Descarga los datos de Supabase antes de empezar
-    def preparar_datos_supabase(self):
+    # Descarga los datos de Supabase antes de empezar y filtra por ciclos
+    def preparar_datos_supabase(self, ciclo_filtro_id=None):
         print("Descargando los datos necesarios de Supabase...")
 
         # Carga los datos
         self.profesores = self.db.obtener_profesores()
-        self.modulos = self.db.obtener_modulos()
+        # Descarga todos
+        todos_modulos = self.db.obtener_modulos()
+
+        if ciclo_filtro_id:
+            print(f"Filtrando para el ciclo ID: {ciclo_filtro_id}")
+            # Se queda solo los módulos de este ciclo
+            self.modulos = [m for m in todos_modulos if m.get('ciclo_id') == ciclo_filtro_id]
+        else:
+            self.modulos = todos_modulos
 
         # Carga las preferencias
         self.gest_pref.cargar_preferencias()
 
         if not self.profesores or not self.modulos:
-            print("Error: No se han encontrado profesores o módulos en la base de datos")
+            print("Error: No se han encontrado profesores o módulos para este ciclo")
             return False
-        
-        # Mapa de nombres a IDs
-        self.mapa_nombres_ids = {p['nombre']: p['id'] for p in self.profesores}
         
         try:
             for modulo in self.modulos:
@@ -57,17 +62,19 @@ class GeneradorAutomatico:
 
             # Limpia asignaciones previas
             self.asignaciones = {}
+
+            self.ocupacion_grupos = {}
             
         except Exception as e:
-            print(f"Error, No se han podido cargar las competencias: {e} ")
+            print(f"Error intentando preparar los datos: {e} ")
             return False
         
-        print(f"Los datos se han encontrado y preparado correctamente. Competencias cargadas para: {len(self.profesores_por_modulo)} asignaturas.")
+        print(f"Los datos se han encontrado y preparado correctamente. Asignaturas a procesor: {len(self.modulos)}")
         return True
         
     # Comprueba que todo carga al ejecutarse
-    def ejecutar(self):
-        carga_exitosa = self.preparar_datos_supabase()
+    def ejecutar(self, ciclo_id = None):
+        carga_exitosa = self.preparar_datos_supabase(ciclo_id)
         if not carga_exitosa:
             return
         
@@ -88,6 +95,7 @@ class GeneradorAutomatico:
             # Ignora las preferencias leves en el 2º intento
             if self.calcular_distribucion(ignorar_preferencias_leves=True):
                 print("Horario generado exitosamente, han sido ignoradas las preferencias leves.")
+                self.guardar_cambios()
             else:
                 print("No ha sido posible generar el horario, se han encontrado conflictos críticos.")
         else:
@@ -99,6 +107,9 @@ class GeneradorAutomatico:
         print("Guardando los resultados en Supabase..")
         
         datos_para_insertar = []
+
+        # Lista de IDs que han sido procesados
+        ids_afectados = list(self.profesores_por_modulo.keys())
 
         # Recorre el resultado en la memoria
         for modulo_id, clases in self.profesores_por_modulo.items():
@@ -116,7 +127,7 @@ class GeneradorAutomatico:
                 datos_para_insertar.append(fila)
 
         if datos_para_insertar:
-            error = self.db.guardar_horarios_generados(datos_para_insertar)
+            error = self.db.guardar_horario_generado(datos_para_insertar, ids_afectados)
             if not error:
                 print(f"Han sido guardadas exitosamente {len(datos_para_insertar)} clases en la base de datos.")
             else:
