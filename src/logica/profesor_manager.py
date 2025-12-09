@@ -64,6 +64,14 @@ class ProfesorManager:
             "horas_max_semana": profesor.horas_max_semana
         }
         res = db.agregar_o_editar_profesor(datos)
+        # res.data usually contains the list of inserted rows, e.g. [{'id': 10, ...}]
+        if res and res.data and len(res.data) > 0:
+            return res.data[0]['id']
+        return None
+
+    def assign_profesor_to_cycle(self, profesor_id, ciclo_id):
+        # Asigna un profesor a un ciclo
+        res = db.asignar_profesor_a_ciclo(profesor_id, ciclo_id)
         return res is not None
 
     def update_profesor(self, profesor):
