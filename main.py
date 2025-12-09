@@ -393,7 +393,9 @@ class MiAplicacion(QMainWindow):
  
     def cargar_horario(self):
         print("Cargando horarios...")
-
+        
+        # Comprueba que ciclo quiero ver el usuario
+        ciclo_actual_id = self.combo_ciclos.currentData()
         # Limpia la tabla visualmente
         self.tabl_horario_grid.clearContents()
 
@@ -416,6 +418,17 @@ class MiAplicacion(QMainWindow):
 
         for clase in datos:
             try:
+
+                # Si la clase no pertenece al ciclo seleccionado o no tiene módulo lo salta
+                if not clase.get('modulos'):
+                    continue
+
+                ciclo_clase = clase['modulos'].get('ciclo_id')
+
+                # Si el ID no coincide no lo rellena
+                if ciclo_clase != ciclo_actual_id:
+                    continue
+
                 # Extrae información básica
                 dia = clase['dia_semana']
                 hora = clase['hora_inicio']
@@ -465,9 +478,13 @@ class MiAplicacion(QMainWindow):
 
         if respuesta == QMessageBox.Yes:
             try:
+
+                # Obtiene el ID de ciclo que se esta visualizando
+                ciclo_actual_id = self.combo_ciclos.currentData()
                 # Llama al generador y lo ejecuta
                 generador = GeneradorAutomatico()
-                generador.ejecutar()
+                # Al pasarle el ciclo_id solo toca ese curso
+                generador.ejecutar(ciclo_id=ciclo_actual_id)
 
                 # Refresca la vista
                 self.cargar_horario()

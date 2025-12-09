@@ -238,14 +238,20 @@ class DBManager:
             print(f"Error obteniendo las preferencias: {e}")
             return []
         
-    def guardar_horario_generado(self, lista_asignaciones: list):
+    def guardar_horario_generado(self, lista_horarios, ids_modulos_afectados):
         # Recibe una lista de diccionarios para insertarla de golpe en la bd
         try:
-            res = self.client.table("horario_generado").insert(lista_asignaciones).execute()
-            return res.data
-        except Exception as e:
-            print(f"Error guardando el horario generado: {e}")
+            if ids_modulos_afectados:
+                self.client.table("horario_generado").delete().in_("modulo_id", ids_modulos_afectados).execute()
+
+            if lista_horarios:
+                self.client.table("horario_generado").insert(lista_horarios).execute()
+
             return None
+        
+        except Exception as e:
+            print(f"Error intentando guardar los horarios: {e}")
+            return str(e)
 
     def limpiar_horarios_anteriores(self):
         try:
@@ -260,27 +266,12 @@ class DBManager:
             query= """
             *,
             profesores(nombre, color_hex),
-            modulos(nombre, ciclos(nombre))
+            modulos(nombre, ciclo_id, ciclos(nombre))
             """
             return self.client.table("horario_generado").select(query).execute().data
         except Exception as e:
             print(f"Error al obtener el horario generado: {e}")
             return []
-        
-    def guardar_horarios_generados(self, lista_horarios):
-        try:
-            # Borra todos los horarios anteriores que no tengan id 0 para evitar duplicados
-            self.client.table("horario_generado").delete().neq("id", 0).execute()
-
-            # Inserta los nuevos horarios
-            if lista_horarios:
-                self.client.table("horario_generado").insert(lista_horarios).execute()
-            
-            return None
-        
-        except Exception as e:
-            print(f"Error crítico al intentar guardar los horarios: {e}")
-            return str(e)
 
 # Instancia única para usar en el resto del programa
 db = DBManager()
