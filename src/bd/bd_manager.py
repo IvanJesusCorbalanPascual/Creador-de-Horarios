@@ -27,6 +27,14 @@ class DBManager:
             print(f"Error crear_ciclo: {e}")
             return None
         
+    def eliminar_ciclo(self, id_ciclo: int):
+        try:
+            res = self.client.table("ciclos").delete().eq("id", id_ciclo).execute()
+            return res.data
+        except Exception as e:
+            print(f"Error eliminar_ciclo: {e}")
+            return None
+        
     # --- PROFESORES ---
     def obtener_profesores(self):
         try:
@@ -126,29 +134,58 @@ class DBManager:
             print(f"Error al obtener los datos de los modulos: {e}")
             return []
         
-    def obtener_modulos_por_ciclo(self, nombre_ciclo: str):
+    def obtener_modulos_por_ciclo(self, ciclo_id: int):
         try:
             res = self.client.table("modulos")\
-                .select("*, ciclos!inner(nombre)")\
-                .eq("ciclos.nombre", nombre_ciclo)\
+                .select("*, profesores(nombre)")\
+                .eq("ciclo_id", ciclo_id)\
                 .execute()
-            return res.data
-        except Exception as e:
-            print(f"Error al obtener módulos del ciclo {nombre_ciclo}: {e}")
-            return []
+           
+            lista_final = []
+            for m in res.data:
+                # Obtenemos el nombre del dict anidado si existe, sino, es None
+                nombre_profe = "Sin Asignar"
+                if m.get('profesores'):
+                    nombre_profe = m['profesores'].get('nombre', "Sin Asignar")
+                
+                item = {
+                    'id': m['id'],
+                    'nombre': m['nombre'],
+                    'horas_semanales': m['horas_semanales'],
+                    'horas_max_dia': m.get('horas_max_dia', 0),
+                    'profesor_id': m.get('profesor_id'),
+                    'nombre_profesor': nombre_profe      
+                }
+                lista_final.append(item)
+                
+            return lista_final
 
+        except Exception as e:
+            print(f"Error al obtener módulos del ciclo {ciclo_id}: {e}")
+            return []
+        
     def obtener_profesores_por_modulo(self, modulo_id: int):
         # Devuelve la lista de nombres de profesores que pueden impartir un módulo
         try:
             # Consulta: de competencia, trae el nombre del profesor que coincide con el modulo_id
             query = "profesor_id, profesores(nombre)"
+
             res = self.client.table("competencia_profesor")\
                 .select(query)\
                 .eq("modulo_id", modulo_id)\
                 .execute()
             
-            # Formateando la respuesta para devolver solo una lista de nombres (Ej: ["Juan", "Ana"])
-            return [item['profesores']['nombre'] for item in res.data if item['profesores']]
+            # Limpiamos la respuesta para que sea fácil de usar en PyQt
+            lista_profes = []
+            for item in res.data:
+                if item.get('profesores'): # Verificar que la relación existe
+                    profesor_data = {
+                        'id': item['profesores']['id'],
+                        'nombre': item['profesores']['nombre']
+                    }
+                    lista_profes.append(profesor_data)
+                    
+            return lista_profes
         except Exception as e:
             print(f"Error obtener_profesores_por_modulo: {e}")
             return []

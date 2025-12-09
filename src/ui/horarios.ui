@@ -6,26 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1033</width>
-    <height>671</height>
+    <width>847</width>
+    <height>702</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,3">
     <item>
      <widget class="QFrame" name="sidebar">
       <property name="minimumSize">
        <size>
-        <width>200</width>
+        <width>250</width>
         <height>0</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>200</width>
+        <width>300</width>
         <height>16777215</height>
        </size>
       </property>
@@ -43,7 +43,24 @@
         <number>20</number>
        </property>
        <item>
+        <widget class="QLabel" name="label_4">
+         <property name="styleSheet">
+          <string notr="true">color:white;
+font-size:20px;</string>
+         </property>
+         <property name="text">
+          <string>Ciclo</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QComboBox" name="combo_ciclos">
+         <property name="cursor">
+          <cursorShape>PointingHandCursor</cursorShape>
+         </property>
          <property name="styleSheet">
           <string notr="true">color:white;</string>
          </property>
@@ -72,7 +89,7 @@
           <string notr="true">color: white; font-weight: bold;</string>
          </property>
          <property name="text">
-          <string>HORARIOS</string>
+          <string>Menú principal</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -89,7 +106,7 @@
          </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
+           <pointsize>14</pointsize>
           </font>
          </property>
          <property name="cursor">
@@ -119,7 +136,7 @@ QPushButton:hover {
 }</string>
          </property>
          <property name="text">
-          <string>Profesores</string>
+          <string>  Profesores</string>
          </property>
          <property name="flat">
           <bool>true</bool>
@@ -136,7 +153,7 @@ QPushButton:hover {
          </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
+           <pointsize>14</pointsize>
           </font>
          </property>
          <property name="cursor">
@@ -166,7 +183,7 @@ QPushButton:hover {
 }</string>
          </property>
          <property name="text">
-          <string>Módulos</string>
+          <string>  Módulos</string>
          </property>
          <property name="flat">
           <bool>true</bool>
@@ -189,7 +206,7 @@ QPushButton:hover {
          </property>
          <property name="font">
           <font>
-           <pointsize>12</pointsize>
+           <pointsize>14</pointsize>
           </font>
          </property>
          <property name="cursor">
@@ -222,7 +239,7 @@ QPushButton:hover {
 }</string>
          </property>
          <property name="text">
-          <string>Horarios</string>
+          <string>  Horarios</string>
          </property>
          <property name="default">
           <bool>false</bool>
@@ -246,7 +263,7 @@ QPushButton:hover {
         </spacer>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit">
+        <widget class="QLineEdit" name="le_ciclo">
          <property name="styleSheet">
           <string notr="true">background-color:white;</string>
          </property>
@@ -274,7 +291,7 @@ QPushButton:hover {
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton">
+        <widget class="QPushButton" name="btn_eliminar_ciclo">
          <property name="font">
           <font>
            <pointsize>12</pointsize>
@@ -301,6 +318,45 @@ color:white;</string>
        <string notr="true">background-color: #f4f6f9;</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="maximumSize">
+            <size>
+             <width>60</width>
+             <height>60</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="pixmap">
+            <pixmap resource="../media/recursos.qrc">:/img/logoGT.png</pixmap>
+           </property>
+           <property name="scaledContents">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
        <item>
         <widget class="QStackedWidget" name="stackedWidget">
          <property name="currentIndex">
@@ -394,6 +450,9 @@ color:white;</string>
            </item>
            <item>
             <widget class="QTableWidget" name="tabla_profesores">
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
              <row>
               <property name="text">
                <string>1</string>
@@ -478,7 +537,7 @@ color:white;</string>
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="lbl_ciclo_modulo">
+              <widget class="QLabel" name="lbl_ciclo_modulos">
                <property name="font">
                 <font>
                  <pointsize>12</pointsize>
@@ -543,6 +602,30 @@ color:white;</string>
            </item>
            <item>
             <widget class="QTableWidget" name="tabla_modulos">
+             <property name="gridStyle">
+              <enum>Qt::SolidLine</enum>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="cornerButtonEnabled">
+              <bool>true</bool>
+             </property>
+             <attribute name="horizontalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+             <attribute name="horizontalHeaderCascadingSectionResizes">
+              <bool>false</bool>
+             </attribute>
+             <attribute name="horizontalHeaderHighlightSections">
+              <bool>true</bool>
+             </attribute>
+             <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+              <bool>false</bool>
+             </attribute>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
              <row>
               <property name="text">
                <string>1</string>
@@ -751,6 +834,25 @@ QPushButton:pressed {
              </item>
             </widget>
            </item>
+           <item>
+            <widget class="QListWidget" name="listWidget">
+             <item>
+              <property name="text">
+               <string>Acceso a Datos</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Interfaces</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Inteligencia Artificial</string>
+              </property>
+             </item>
+            </widget>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -765,13 +867,15 @@ QPushButton:pressed {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1033</width>
+     <width>847</width>
      <height>26</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="../media/recursos.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -222,7 +222,7 @@ class GeneradorAutomatico:
         return True
     
     def contar_horas_modulo_dia(self, modulo_id, dia):
-        # Cuenta cuantas horas lleva ya  este modulo en este día
+        # Cuenta cuantas horas lleva ya este modulo en este día
         count = 0
         if modulo_id in self.profesores_por_modulo:
             for clase in self.profesores_por_modulo[modulo_id]:
