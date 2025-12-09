@@ -1,6 +1,6 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QDialog, QMessageBox, QHeaderView, QAbstractItemView
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5 import uic
@@ -103,6 +103,137 @@ class DialogoModulo(QDialog):
             "profesor_asignado": self.le_profesor.text().strip(),
             "ciclo_id": self.ciclo_id # Importante: asignamos el módulo al ciclo actual
         }
+    
+class DialogoPreferencia(QDialog):
+    def __init__(self, parent=None, profesor_id=None, nombre_profe=""):
+        super().__init__(parent)
+        # Carga el archivo UI
+        uic.loadUi(os.path.join("src", "ui", "preferencia_form.ui"), self)
+        self.profesor_id = profesor_id
+        self.setWindowTitle(f"Restricción para: {nombre_profe}")
+
+        self.buttonBox.accepted.connect(self.aceptar)
+        self.buttonBox.rejected.connect(self.reject)
+            
+    def aceptar(self):
+        # El indice del combobox de los días
+        dia_semana = self.cb_dia.currentIndex()
+
+        # Convierte a String las horas
+        hora_inicio = self.te_inicio.time().toString("HH:mm:ss")
+        hora_fin = self.te_fin.time().toString("HH:mm:ss")
+
+        # Mapea el combobox de tipo a la prioridad que corresponde
+        tipo_index = self.cb_tipo.currentIndex()
+        prioridad = 1 if tipo_index == 0 else 2
+
+        motivo = ""
+        if hasattr(self, 'le_motivo'):
+            motivo = self.le_motivo.text().strip()
+
+        # Valida que la hora de inicio no sea mayor o igual que la hora de fin
+        if hora_inicio >= hora_fin:
+            QMessageBox.warning(self, "Error", "La hora de inicio debe ser anterior a la de fin.")
+            return
+            
+        # Prepara los datos para supabase
+        datos = {
+            "profesor_id": self.profesor_id,
+            "dia_semana": dia_semana,
+            "hora_inicio": hora_inicio,
+            "hora_fin": hora_fin,
+            "nivel_prioridad": prioridad,
+            "motivo": motivo
+        }
+
+        res = db.agregar_preferencia(datos)
+
+        if res:
+            QMessageBox.information(self, "Éxito", "Se ha guardado la restricción correctamente.")
+            self.accept()
+        else:
+            QMessageBox.critical(self, "Error", "No se ha podido guardar la restricción en la BD.")
+
+class DialogoListaPreferencias(QDialog):
+    def __init__(self, parent=None, profesor_id=None, nombre_profe=""):
+        super().__init__(parent)
+        uic.loadUi(os.path.join("src", "ui", "lista_preferencias.ui"), self)
+        self.profesor_id = profesor_id
+
+        # Actualiza el título con el nombre del profesor
+        self.setWindowTitle(f"Gestionar: {nombre_profe}")
+        # Actualiza el label dentro del groupbox con eol nombre del profesor
+        if hasattr(self, 'lbl_nombre_profe'):
+            self.lbl_nombre_profe.setText(f"Restricciones de: {nombre_profe}")
+
+        # Configura la tabla
+        self.tabla_restricciones.setColumnCount(5)
+        self.tabla_restricciones.setHorizontalHeaderLabels(["Día", "Inicio", "Fin", "Prioridad", "Motivo"])
+        self.tabla_restricciones.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # Selecciona una fila entera
+        self.tabla_restricciones.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+        # Conexión con los botones
+        self.btn_nueva.clicked.connect(self.abrir_nueva_restriccion)
+        self.btn_borrar.clicked.connect(self.borrar_restriccion_seleccionada)
+        self.btn_cerrar.clicked.connect(self.reject)
+
+        # Carga los datos iniciales
+        self.cargar_datos()
+
+    def cargar_datos(self):
+        datos = db.obtener_preferencias(self.profesor_id)
+        self.tabla_restricciones.setRowCount(0)
+
+        # Almacena los dias de la semana
+        dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+
+        for fila, pref in enumerate(datos):
+            self.tabla_restricciones.insertRow(fila)
+
+            # Traducción del día de número a texto
+            dia_txt = dias_semana[pref['dia_semana']] if 0 <= pref['dia_semana'] < 5 else "Desconocido"
+            self.tabla_restricciones.setItem(fila, 0, QTableWidgetItem(dia_txt))
+
+            # Horas Inicio y Fin
+            self.tabla_restricciones.setItem(fila, 1, QTableWidgetItem(str(pref['hora_inicio'])))
+            self.tabla_restricciones.setItem(fila, 2, QTableWidgetItem(str(pref['hora_fin'])))
+
+            # Prioridades
+            prior_txt = "Obligatorio" if pref['nivel_prioridad'] == 1 else "Preferiblemente"
+            self.tabla_restricciones.setItem(fila, 3, QTableWidgetItem(prior_txt))
+
+            # Motivo
+            self.tabla_restricciones.setItem(fila, 4, QTableWidgetItem(str(pref['motivo'])))
+
+            # Guarda el ID real de cada fila 
+            self.tabla_restricciones.item(fila, 0).setData(Qt.UserRole, pref['id'])
+
+    def abrir_nueva_restriccion(self):
+        # Abre la ventana para añadir restricciones
+        dialogo = DialogoPreferencia(self, self.profesor_id, "Nueva Restricción")
+        if dialogo.exec_() == QDialog.Accepted:
+            # Recarga la lista al volver
+            self.cargar_datos()
+
+    def borrar_restriccion_seleccionada(self):
+        fila = self.tabla_restricciones.currentRow()
+        if fila < 0:
+            QMessageBox.warning(self, "Aviso", "Debes seleccionar una fila para borrar")
+            return
+        
+        # Recupera el ID real
+        id_pref = self.tabla_restricciones.item(fila, 0).data(Qt.UserRole)
+
+        confirm = QMessageBox.question(self, "ELIMINAR", "¿SEGURO que quieres eliminar esta restricción?", 
+                                        QMessageBox.Yes | QMessageBox.No)
+        
+        if confirm == QMessageBox.Yes:
+            if db.eliminar_preferencia(id_pref):
+                self.cargar_datos()
+            else:
+                QMessageBox.critical(self, "Error", "No ha sido posible eliminar")
+
 # --- Ventana Principal ---
 class MiAplicacion(QMainWindow):
     def __init__(self):
@@ -130,6 +261,7 @@ class MiAplicacion(QMainWindow):
         self.btn_agregar_profe.clicked.connect(self.agregar_profesor)
         self.btn_editar_profe.clicked.connect(self.editar_profesor)
         self.btn_borrar_profe.clicked.connect(self.borrar_profesor)
+        self.btn_preferencias.clicked.connect(self.gestionar_preferencias)
 
         # Conexiones de botones de Profesores
         self.btn_agregar_modulo.clicked.connect(self.agregar_modulo)
@@ -287,12 +419,27 @@ class MiAplicacion(QMainWindow):
         else:
             QMessageBox.warning(self, "Advertencia", "Selecciona un profesor para borrar")
 
+    def gestionar_preferencias(self):
+        # Obtiene la fila seleccionada
+        fila = self.tabla_profesores.currentRow()
+        if fila < 0:
+            QMessageBox.warning(self, "Advertencia", "Selecciona un profesor primero")
+            return
+        
+        # Obtiene el ID y el nombre
+        item_nombre = self.tabla_profesores.item(fila, 0)
+        profesor_id = item_nombre.data(Qt.UserRole)
+        nombre_profe = item_nombre.text()
+
+        dialogo = DialogoListaPreferencias(self, profesor_id, nombre_profe)
+        dialogo.exec_()
+
     def agregar_modulo(self):
         # 1. Obtenemos el ID del ciclo que se está viendo actualmente
         ciclo_id = self.combo_ciclos.currentData()
         
         if not ciclo_id:
-            QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido primero.")
+            QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido primero")
             return
 
         # 2. Abrimos el diálogo pasándole el ciclo_id
@@ -310,7 +457,7 @@ class MiAplicacion(QMainWindow):
             if self.modulo_manager.agregar_modulo(datos):
                 self.cargar_modulos() # Refrescar la tabla
             else:
-                QMessageBox.critical(self, "Error", "No se pudo guardar el módulo.")
+                QMessageBox.critical(self, "Error", "No se pudo guardar el módulo")
 
     def editar_modulo(self):
         # Editar el módulo seleccionado en la tabla
@@ -493,6 +640,7 @@ class MiAplicacion(QMainWindow):
 
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Se ha producido un error: {str(e)}")
+    
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

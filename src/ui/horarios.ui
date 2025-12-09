@@ -390,10 +390,20 @@ color:white;</string>
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QPushButton" name="btn_preferencias">
+               <property name="text">
+                <string>Gestionar Preferencias</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
             <widget class="QTableWidget" name="tabla_profesores">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
              <row>
               <property name="text">
                <string>1</string>
@@ -543,6 +553,9 @@ color:white;</string>
            </item>
            <item>
             <widget class="QTableWidget" name="tabla_modulos">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
              <row>
               <property name="text">
                <string>1</string>
@@ -675,6 +688,9 @@ QPushButton:pressed {
            </item>
            <item>
             <widget class="QTableWidget" name="tabl_horario_grid">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
              <property name="dragEnabled">
               <bool>true</bool>
              </property>

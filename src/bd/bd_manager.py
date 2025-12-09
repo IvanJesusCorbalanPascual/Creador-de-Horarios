@@ -272,6 +272,14 @@ class DBManager:
         except Exception as e:
             print(f"Error al obtener el horario generado: {e}")
             return []
+        
+    def eliminar_preferencia(self, id_preferencias: int):
+        try:
+            res = self.client.table("preferencias").delete().eq("id", id_preferencias).execute()
+            return res.data
+        except Exception as e:
+            print(f"Error al intentar eliminar una preferencia: {e}")
+            return None
 
 # Instancia única para usar en el resto del programa
 db = DBManager()
