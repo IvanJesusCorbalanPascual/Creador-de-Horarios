@@ -22,6 +22,8 @@ class GeneradorAutomatico:
 
         self.profesores = []
         self.modulos = []
+        # Lista que guarda los conflictos
+        self.conflictos = []
 
         # Aqui se guarda el horario generado
         self.profesores_por_modulo = {}
@@ -31,6 +33,8 @@ class GeneradorAutomatico:
 
         # Evita duplicados de grupo/alumnos
         self.ocupacion_grupos = {}
+
+
 
 
     # Descarga los datos de Supabase antes de empezar y filtra por ciclos
@@ -74,6 +78,10 @@ class GeneradorAutomatico:
         
     # Comprueba que todo carga al ejecutarse
     def ejecutar(self, ciclo_id = None):
+
+        # Limpia los conflictos 
+        self.conflictos = []
+
         carga_exitosa = self.preparar_datos_supabase(ciclo_id)
         if not carga_exitosa:
             return
@@ -228,7 +236,13 @@ class GeneradorAutomatico:
                     intentos_sin_exito += 1
                     # Si falla muchas veces + de 100, cancela el intento
                     if intentos_sin_exito > 100:
-                        print(f"Error al asignar: {modulo['nombre']} Profesor ID: {profesor_id}")
+                        mensaje = f"Error Crítico: No se ha podido asignar '{modulo['nombre']}' (Profesor ID: {profesor_id}) por falta de hueco o restricciones"
+                        # Imprime el mensaje de error en la consola
+                        print(mensaje)
+
+                        # Guarda el mensaje de error en una lista
+                        self.conflictos.append(mensaje)
+
                         return False
         return True
     
