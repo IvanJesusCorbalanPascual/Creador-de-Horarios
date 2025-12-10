@@ -1,5 +1,5 @@
 import os
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QTableWidgetItem, QHeaderView, QDialog
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QTableWidgetItem, QHeaderView, QDialog, QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5 import uic
@@ -7,6 +7,7 @@ from src.bd.bd_manager import db
 from src.logica.profesor_manager import ProfesorManager
 from src.logica.modulo_manager import ModuloManager
 from src.logica.ciclo_manager import CicloManager
+from src.logica.exportador_manager import ExportadorManager
 from src.logica.generador import GeneradorAutomatico
 from src.config import DB_CONFIG
 from src.ui.dialogs import DialogoProfesor, DialogoModulo, DialogoListaPreferencias
@@ -28,6 +29,7 @@ class MiAplicacion(QMainWindow):
         self.cargar_ciclos_db() # Carga ciclos
         self.btn_generar_auto.clicked.connect(self.ejecutar_generador)
         self.ciclo_manager= CicloManager(self.db)
+        self.exportador = ExportadorManager()
         self.configuracion_menu()
         self.cambiar_pagina(0) # Página inicial
 
@@ -53,6 +55,12 @@ class MiAplicacion(QMainWindow):
         
         # Recarga al cambiar ciclo
         self.combo_ciclos.currentIndexChanged.connect(self.cambiar_ciclo)
+        
+        # Boton exportar
+        try:
+            self.btn_exportar.clicked.connect(self.exportar_horario)
+        except:
+             pass
 
     # Marca pestaña activa
     def set_active_tab(self, index):
@@ -458,3 +466,44 @@ class MiAplicacion(QMainWindow):
 
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Se ha producido un error: {str(e)}")
+
+    def exportar_horario(self):
+        ciclo_actual_id = self.combo_ciclos.currentData()
+        
+        if not ciclo_actual_id:
+            QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido")
+            return
+        
+        nombre_ciclo=self.combo_ciclos.currentText()
+        nombre_horario= f"Horario_{nombre_ciclo}.csv"
+    
+        datos = self.db.obtener_datos_exportacion(ciclo_id=ciclo_actual_id)
+
+        if not datos:
+            QMessageBox.warning(self, "Aviso", f"El horario del ciclo {self.combo_ciclos.currentText()} está vacío. Nada que exportar.")
+            return
+        
+        # Abrir selector de archivos para elegir donde guardar el archivo csv
+        ruta, _ = QFileDialog.getSaveFileName(
+            self, "Guardar Horario CSV", nombre_horario, "Archivos CSV (*.csv)"
+        )
+
+        if not ruta:
+            return # El usuario canceló la exportacion
+        
+        if not ruta.endswith('.csv'):
+            ruta += '.csv'
+        
+        try:
+            # Llama al método de exportación real. El ExportadorManager devuelve (True/False, Mensaje)
+            exito, mensaje = self.exportador.exportar_horario_csv(ruta, datos)
+
+            if exito:
+                # Mostrar mensaje de éxito solo si realmente se guardó
+                QMessageBox.information(self, "Éxito", mensaje)
+            else:
+                # Mostrar mensaje de error si el Exportador devuelve False
+                QMessageBox.critical(self, "Error", mensaje)
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Error Crítico", f"Fallo al procesar la exportación: {str(e)}")
