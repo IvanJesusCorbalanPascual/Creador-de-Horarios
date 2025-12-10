@@ -245,5 +245,3 @@ class GeneradorAutomatico:
 if __name__ == "__main__":
     generador = GeneradorAutomatico()
     generador.ejecutar()
-
-    

@@ -10,6 +10,8 @@ from src.logica.profesor_manager import ProfesorManager
 from src.logica.modulo_manager import ModuloManager
 from src.logica.ciclo_manager import CicloManager
 from src.logica.generador import GeneradorAutomatico
+from src.logica.exportador_manager import ExportadorManager
+from PyQt5.QtWidgets import QFileDialog # para exportar el csv
 
 # --- CONSTANTES ---
 # Estilo visual CSS "Green Tonic"
@@ -54,7 +56,7 @@ QPushButton#btn_preferencias {
 QPushButton#btn_agregar_modulo:hover, QPushButton#btn_editar_modulo:hover,
 QPushButton#btn_agregar_profe:hover, QPushButton#btn_editar_profe:hover,
 QPushButton#btn_preferencias:hover {
-    border: 3px solid #43a047; /* Un borde un poco más grueso al pasar el ratón */
+    border: 5px solid #43a047; /* Un borde un poco más grueso al pasar el ratón */
     background-color: #e8f5e9; /* Un fondo verde muy suave opcional */
 }
 
@@ -63,7 +65,6 @@ QPushButton#btn_agregar_modulo:pressed, QPushButton#btn_editar_modulo:pressed,
 QPushButton#btn_agregar_profe:pressed, QPushButton#btn_editar_profe:pressed, 
 QPushButton#btn_preferencias:pressed {
     background-color: #1b5e20; /* Color oscuro al presionar */
-    color: white; /* Texto blanco para que se lea bien */
 }
 
 /* --- Botones de Acción Peligrosa (Eliminar/Borrar) --- */
@@ -145,6 +146,95 @@ QLabel#label_titulo, QLabel[text^="Modulos de"], QLabel[text^="Tabla de Profesor
     font-size: 22px;
     font-weight: bold;
     color: #1b5e20;
+    
+}
+/* --- Tablas (QTableWidget) --- */
+QTableWidget {
+    /* Fondo limpio y un borde que se integra con el verde */
+    background-color: white;
+    gridline-color: #c8e6c9; /* Líneas de cuadrícula verde muy claro */
+    border: 2px solid #81c784; /* Borde exterior verde suave más visible */
+    border-radius: 8px; /* Bordes redondeados para el contenedor de la tabla */
+    
+    /* Filas alternas para mejor legibilidad */
+    alternate-background-color: #f1f8e9; /* Verde pálido muy sutil */
+    
+    /* Fuente general de la tabla */
+    font-size: 14px;
+    color: #263238; /* Texto gris oscuro/negro para buena legibilidad */
+}
+
+/* --- CABECERAS (QHeaderView) --- */
+QHeaderView::section {
+    background-color: #2e7d32; /* Verde bosque sólido */
+    color: white;
+    padding: 10px 8px; /* Más padding para que la cabecera sea más alta */
+    border: none;
+    border-right: 1px solid #1b5e20; /* Separador entre columnas */
+    font-weight: bold;
+    font-size: 15px;
+}
+/* La cabecera horizontal (verticalHeader) que tiene los números de fila */
+QHeaderView::vertical {
+    background-color: #e8f5e9; /* Gris verde pálido para los números de fila */
+    border: none;
+    border-right: 1px solid #81c784;
+}
+
+/* --- ÍTEMS (Celdas de Datos) --- */
+QTableWidget::item {
+    padding: 5px;
+}
+
+/* --- Tablas (QTableWidget) --- */
+QTableWidget {
+    /* Fondo limpio y un borde que se integra con el verde */
+    background-color: white; /* <--- Fondo Blanco Puro */
+    gridline-color: #c8e6c9; /* Líneas de cuadrícula verde muy claro */
+    border: 2px solid #81c784; /* Borde exterior verde suave más visible */
+    border-radius: 8px; /* Bordes redondeados para el contenedor de la tabla */
+    
+    /* Filas alternas para mejor legibilidad */
+    alternate-background-color: #f1f8e9; /* Verde pálido muy sutil */
+    
+    /* Fuente general de la tabla */
+    font-size: 14px;
+    color: #263238; /* Texto gris oscuro/negro para buena legibilidad */
+}
+
+/* --- CABECERAS (QHeaderView) --- */
+QHeaderView::section {
+    background-color: #2e7d32; /* Verde bosque sólido */
+    color: white;
+    padding: 10px 8px; /* Más padding para que la cabecera sea más alta */
+    border: none;
+    border-right: 1px solid #1b5e20; /* Separador entre columnas */
+    font-weight: bold;
+    font-size: 15px;
+}
+/* La cabecera horizontal (verticalHeader) que tiene los números de fila */
+QHeaderView::vertical {
+    background-color: #e8f5e9; /* Gris verde pálido para los números de fila */
+    border: none;
+    border-right: 1px solid #81c784;
+}
+
+/* --- ÍTEMS (Celdas de Datos) --- */
+QTableWidget::item {
+    padding: 5px;
+}
+
+/* --- EFECTO HOVER EN FILAS (Para ver dónde está el ratón) --- */
+QTableWidget::item:hover {
+    background-color: #e8f5e9; /* Fondo muy claro que resalta ligeramente */
+    color: #1b5e20;
+}
+
+/* --- SELECCIÓN (Al hacer clic) --- */
+QTableWidget::item:selected {
+    background-color: #a5d6a7; /* Color de selección suave */
+    color: #1b5e20; /* Texto verde oscuro al seleccionar */
+    font-weight: 500;
 }
 """
 
@@ -454,7 +544,7 @@ class MiAplicacion(QMainWindow):
         # Inicializamos la base de datos
         self.db = db
         self.modulo_manager = ModuloManager(self.db)
-        icon_path = "src/media/logoGT.png"
+        icon_path = "src/media/reloj.ico"
         self.setWindowIcon(QIcon(icon_path)) # Icono de ventana
         # Cargando la vista principal
         uic.loadUi("src/ui/horarios.ui", self) 
@@ -465,6 +555,7 @@ class MiAplicacion(QMainWindow):
         self.ciclo_manager= CicloManager(self.db)
         self.configuracion_menu()
         self.cambiar_pagina(0) # Pagina por defecto (profesores) al abrir la apliacion
+        self.exportador = ExportadorManager()
 
     def configuracion_menu(self):
 
@@ -474,6 +565,7 @@ class MiAplicacion(QMainWindow):
         self.btn_horarios.clicked.connect(lambda: self.cambiar_pagina(2))
         self.btn_agregar_ciclo.clicked.connect(self.agregar_nuevo_ciclo)
         self.btn_eliminar_ciclo.clicked.connect(self.eliminar_ciclo_actual)
+        self.btn_exportar_csv.clicked.connect(self.exportar_horario)
         
         # Conexiones de botones de Profesores
         self.btn_agregar_profe.clicked.connect(self.agregar_profesor)
@@ -508,7 +600,7 @@ class MiAplicacion(QMainWindow):
             self.cargar_horario()
 
     def agregar_nuevo_ciclo(self):
-        nombre = self.le_ciclo.text()
+        nombre = self.le_ciclo.text().strip()
         if nombre:
             if self.ciclo_manager.agregar_ciclo(nombre):
                 self.le_ciclo.clear() # Limpia el LineEdit
@@ -907,8 +999,48 @@ class MiAplicacion(QMainWindow):
 
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Se ha producido un error: {str(e)}")
-    
 
+    def exportar_horario(self):
+        ciclo_actual_id = self.combo_ciclos.currentData()
+        
+        if not ciclo_actual_id:
+            QMessageBox.warning(self, "Aviso", "Selecciona un ciclo válido")
+            return
+        
+        nombre_ciclo=self.combo_ciclos.currentText()
+        nombre_horario= f"Horario_{nombre_ciclo}.csv"
+    
+        datos = self.db.obtener_datos_exportacion(ciclo_id=ciclo_actual_id)
+
+        if not datos:
+            QMessageBox.warning(self, "Aviso", f"El horario del ciclo {self.combo_ciclos.currentText()} está vacío. Nada que exportar.")
+            return
+        
+        # Abrir selector de archivos para elegir donde guardar el archivo csv
+        ruta, _ = QFileDialog.getSaveFileName(
+            self, "Guardar Horario CSV", nombre_horario, "Archivos CSV (*.csv)"
+        )
+
+        if not ruta:
+            return # El usuario canceló la exportacion
+        
+        if not ruta.endswith('.csv'):
+            ruta += '.csv'
+        
+        try:
+            # Llama al método de exportación real. El ExportadorManager devuelve (True/False, Mensaje)
+            exito, mensaje = self.exportador.exportar_horario_csv(ruta, datos)
+
+            if exito:
+                # Mostrar mensaje de éxito solo si realmente se guardó
+                QMessageBox.information(self, "Éxito", mensaje)
+            else:
+                # Mostrar mensaje de error si el Exportador devuelve False
+                QMessageBox.critical(self, "Error", mensaje)
+                
+        except Exception as e:
+            QMessageBox.critical(self, "Error Crítico", f"Fallo al procesar la exportación: {str(e)}")
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyleSheet(GREEN_TONIC_STYLE)
