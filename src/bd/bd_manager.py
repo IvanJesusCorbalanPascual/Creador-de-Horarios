@@ -1,7 +1,7 @@
 import os
 from supabase import create_client, Client
 
-# CONSTANTES
+# CREDENCIALES
 URL = "https://lvcrigxkcyyeqbqfgruo.supabase.co"
 KEY = "sb_secret_b_o0X_MZDs9IWdxSs-kuHA_W5mNG5dX"
 
@@ -97,6 +97,7 @@ class DBManager:
                 res = self.client.table("profesores").insert(datos).execute()
                 print(f"Respuesta Supabase (Insert): {res}")
                 return res
+            
         except Exception as e:
             print(f"Error al Crear / Editar el profesor: {e}")
             import traceback
@@ -303,5 +304,46 @@ class DBManager:
             print(f"Error al intentar eliminar una preferencia: {e}")
             return None
 
+    # En DBManager...
+    def obtener_datos_exportacion(self, ciclo_id=None):
+        try:
+            # Pedimos el ID del ciclo dentro de la relación para poder verificarlo luego
+            query = (
+                "dia_semana, hora_inicio, hora_fin,"
+                "modulos (nombre, ciclos (nombre, id))," 
+                "profesores (nombre)"
+            )
+            query_limpia = query.replace('\n', '').replace(' ', '')
+            
+            # 1. Consulta a BD
+            res = self.client.table("horario_generado").select(query_limpia)
+            if ciclo_id:
+                res = res.eq('modulos.ciclo_id', ciclo_id)
+            
+            resultado = res.execute()
+            datos_crudos = resultado.data or []
+            
+            # --- CORRECCIÓN: FILTRO DE SEGURIDAD EN PYTHON ---
+            # Esto elimina las filas "fantasma" donde el módulo ya no existe (None)
+            datos_limpios = []
+            
+            if ciclo_id:
+                for fila in datos_crudos:
+                    # Verificamos que la estructura esté completa
+                    modulo = fila.get('modulos')
+                    if modulo and modulo.get('ciclos'):
+                        # Comprobamos que el ID del ciclo coincida exactamente
+                        if modulo['ciclos'].get('id') == ciclo_id:
+                            datos_limpios.append(fila)
+            else:
+                # Si no se filtró por ciclo, devolvemos todo lo que tenga datos válidos
+                datos_limpios = [d for d in datos_crudos if d.get('modulos')]
+
+            return datos_limpios
+        
+        except Exception as e:
+            print(f"Error obteniendo datos exportación: {e}")
+            return []
+        
 # Instancia única para usar en el resto del programa
 db = DBManager()

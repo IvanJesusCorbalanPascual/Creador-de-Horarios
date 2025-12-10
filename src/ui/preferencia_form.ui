@@ -6,136 +6,126 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>395</width>
-    <height>292</height>
+    <width>417</width>
+    <height>315</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Añadir restricción</string>
   </property>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>10</y>
-     <width>341</width>
-     <height>211</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Restricciones del profesor</string>
-   </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="2" column="1">
-     <widget class="QTimeEdit" name="te_fin">
-      <property name="displayFormat">
-       <string>HH:mm</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QTimeEdit" name="te_inicio">
-      <property name="displayFormat">
-       <string>HH:mm</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="label_4">
-      <property name="text">
-       <string>Tipo:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QComboBox" name="cb_tipo">
-      <item>
-       <property name="text">
-        <string>Obligatorio</string>
-       </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string>Restricciones del profesor</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="1">
+       <widget class="QTimeEdit" name="te_fin">
+        <property name="displayFormat">
+         <string>HH:mm</string>
+        </property>
+       </widget>
       </item>
-      <item>
-       <property name="text">
-        <string>Preferiblemente</string>
-       </property>
+      <item row="1" column="1">
+       <widget class="QTimeEdit" name="te_inicio">
+        <property name="displayFormat">
+         <string>HH:mm</string>
+        </property>
+       </widget>
       </item>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>Desde:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>Hasta:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QComboBox" name="cb_dia">
-      <item>
-       <property name="text">
-        <string>Lunes</string>
-       </property>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Tipo:</string>
+        </property>
+       </widget>
       </item>
-      <item>
-       <property name="text">
-        <string>Martes</string>
-       </property>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="cb_tipo">
+        <item>
+         <property name="text">
+          <string>Obligatorio</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Preferiblemente</string>
+         </property>
+        </item>
+       </widget>
       </item>
-      <item>
-       <property name="text">
-        <string>Miercoles</string>
-       </property>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Desde:</string>
+        </property>
+       </widget>
       </item>
-      <item>
-       <property name="text">
-        <string>Jueves</string>
-       </property>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Hasta:</string>
+        </property>
+       </widget>
       </item>
-      <item>
-       <property name="text">
-        <string>Viernes</string>
-       </property>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cb_dia">
+        <item>
+         <property name="text">
+          <string>Lunes</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Martes</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Miercoles</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Jueves</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Viernes</string>
+         </property>
+        </item>
+       </widget>
       </item>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Día:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1">
-     <widget class="QLineEdit" name="le_motivo"/>
-    </item>
-    <item row="4" column="0">
-     <widget class="QLabel" name="label_5">
-      <property name="text">
-       <string>Motivo:</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>180</x>
-     <y>250</y>
-     <width>193</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Día:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="le_motivo"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Motivo:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

@@ -24,6 +24,7 @@ class GeneradorAutomatico:
         self.modulos = []
         # Conflictos encontrados
         self.conflictos = []
+        self.advertencias = []
 
         # Horario generado
         self.profesores_por_modulo = {}
@@ -77,6 +78,8 @@ class GeneradorAutomatico:
 
         # Reinicia conflictos
         self.conflictos = []
+        # Limpia las advertencias
+        self.advertencias = []
 
         carga_exitosa = self.preparar_datos_supabase(ciclo_id)
         if not carga_exitosa:
@@ -98,13 +101,14 @@ class GeneradorAutomatico:
 
             # Reintento ignorando preferencias leves
             if self.calcular_distribucion(ignorar_preferencias_leves=True):
-                print("Horario generado exitosamente, han sido ignoradas las preferencias leves.")
-                self.guardar_cambios()
+                print("Horario generado exitosamente, han sido ignoradas las preferencias leves")
+
+                self.advertencias.append("Se han ignorado las preferencias de nivel 2, solo se tendran en cuenta las obligatorias")
+           
             else:
-                print("No ha sido posible generar el horario, se han encontrado conflictos críticos.")
+                print("No ha sido posible generar el horario, se han encontrado conflictos críticos")
         else:
             print("¡Horario generado exitosamente!")
-            self.guardar_cambios()
 
 
     def guardar_cambios(self):
@@ -232,7 +236,14 @@ class GeneradorAutomatico:
                     intentos_sin_exito += 1
                     # Aborta tras fallos reiterados
                     if intentos_sin_exito > 100:
-                        mensaje = f"Error Crítico: No se ha podido asignar '{modulo['nombre']}' (Profesor ID: {profesor_id}) por falta de hueco o restricciones"
+                        nombre_profe = "Desconocido"
+                        for p in self.profesores:
+                            if p['id'] == profesor_id:
+                                nombre_profe = p['nombre']
+                                break
+
+                        mensaje = f"No hay hueco para asignar '{modulo['nombre']}' al profesor {nombre_profe}"
+
                         # Imprime el mensaje de error en la consola
                         print(mensaje)
 
@@ -255,5 +266,3 @@ class GeneradorAutomatico:
 if __name__ == "__main__":
     generador = GeneradorAutomatico()
     generador.ejecutar()
-
-    

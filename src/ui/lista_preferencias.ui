@@ -13,88 +13,84 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>20</y>
-     <width>641</width>
-     <height>311</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string/>
-   </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="2" column="3">
-     <widget class="QPushButton" name="btn_cerrar">
-      <property name="text">
-       <string>Cerrar</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QPushButton" name="btn_nueva">
-      <property name="text">
-       <string>Nueva restricción</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="lbl_nombre_profe">
-      <property name="font">
-       <font>
-        <pointsize>9</pointsize>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>Restricciones de: </string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0" colspan="4">
-     <widget class="QTableWidget" name="tabla_restricciones">
-      <property name="editTriggers">
-       <set>QAbstractItemView::NoEditTriggers</set>
-      </property>
-      <column>
-       <property name="text">
-        <string>Día</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Inicio</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Fin</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Prioridad</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Motivo</string>
-       </property>
-      </column>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QPushButton" name="btn_borrar">
-      <property name="text">
-       <string>Borrar seleccionada</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="title">
+      <string/>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="2" column="3">
+       <widget class="QPushButton" name="btn_cerrar">
+        <property name="text">
+         <string>Cerrar</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QPushButton" name="btn_nueva">
+        <property name="text">
+         <string>Nueva restricción</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="lbl_nombre_profe">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Restricciones de: </string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="4">
+       <widget class="QTableWidget" name="tabla_restricciones">
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <column>
+         <property name="text">
+          <string>Día</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Inicio</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Fin</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Prioridad</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Motivo</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QPushButton" name="btn_borrar">
+        <property name="text">
+         <string>Borrar seleccionada</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>
