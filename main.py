@@ -995,8 +995,27 @@ class MiAplicacion(QMainWindow):
                 # Refresca la vista
                 self.cargar_horario()
 
-                QMessageBox.information(self, "Éxito", "¡Horario generado con éxito!", QMessageBox.Ok)
-
+                if generador.conflictos:
+                    txt_conflictos = "\n".join(generador.conflictos)
+                    QMessageBox.warning(self, "Generación cancelada", 
+                                        f"NO se ha guardado el horario, se encontraron incidencias:\n\n{txt_conflictos}\n\nComprueba las restricciones y vuelve a intentarlo")
+                    # Comprueba si ha sido un exito a medias
+                elif generador.advertencias:
+                    # Pregunta si/no
+                    txt_avisos = "\n".join(generador.advertencias)
+                    pregunta = QMessageBox.question(self, "Conflictos de Preferencia", f"El horario se ha generado, pero \n\n{txt_avisos}\n\n ¿Quieres guardarlo de todas formas ignorando esas preferencias?",
+                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                    # Si el usuario elige si, guarda los cambios y refresca el horario
+                    if pregunta == QMessageBox.Yes:
+                        generador.guardar_cambios()
+                        self.cargar_horario()
+                        QMessageBox.information(self, "Guardado", "Se ha guardado el horario con advertencias")
+                    else:
+                        QMessageBox.information(self, "Cancelado", "Cancelado, no se han guardado los cambios")
+                else:
+                    generador.guardar_cambios()
+                    self.cargar_horario()
+                    QMessageBox.information(self, "Éxito Total", "¡Horario generado perfectamente! Todas las preferencias se han respetado", QMessageBox.Ok)
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Se ha producido un error: {str(e)}")
 

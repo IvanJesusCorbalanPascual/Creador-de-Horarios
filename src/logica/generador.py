@@ -22,6 +22,9 @@ class GeneradorAutomatico:
 
         self.profesores = []
         self.modulos = []
+        # Lista que guarda los conflictos
+        self.conflictos = []
+        self.advertencias = []
 
         # Aqui se guarda el horario generado
         self.profesores_por_modulo = {}
@@ -31,6 +34,8 @@ class GeneradorAutomatico:
 
         # Evita duplicados de grupo/alumnos
         self.ocupacion_grupos = {}
+
+
 
 
     # Descarga los datos de Supabase antes de empezar y filtra por ciclos
@@ -74,6 +79,12 @@ class GeneradorAutomatico:
         
     # Comprueba que todo carga al ejecutarse
     def ejecutar(self, ciclo_id = None):
+
+        # Limpia los conflictos 
+        self.conflictos = []
+        # Limpia las advertencias
+        self.advertencias = []
+
         carga_exitosa = self.preparar_datos_supabase(ciclo_id)
         if not carga_exitosa:
             return
@@ -87,6 +98,7 @@ class GeneradorAutomatico:
             print("Reintentando teniendo en cuenta solo restricciones obligatorias (1)")
 
             # Limpia completamente para intentarlo de nuevo
+            self.conflictos = []
             self.asignaciones = {}
             self.ocupacion_grupos = {}
             for modulo in self.modulos:
@@ -94,13 +106,14 @@ class GeneradorAutomatico:
 
             # Ignora las preferencias leves en el 2º intento
             if self.calcular_distribucion(ignorar_preferencias_leves=True):
-                print("Horario generado exitosamente, han sido ignoradas las preferencias leves.")
-                self.guardar_cambios()
+                print("Horario generado exitosamente, han sido ignoradas las preferencias leves")
+
+                self.advertencias.append("Se han ignorado las preferencias de nivel 2, solo se tendran en cuenta las obligatorias")
+           
             else:
-                print("No ha sido posible generar el horario, se han encontrado conflictos críticos.")
+                print("No ha sido posible generar el horario, se han encontrado conflictos críticos")
         else:
             print("¡Horario generado exitosamente!")
-            self.guardar_cambios()
 
 
     def guardar_cambios(self):
@@ -228,7 +241,20 @@ class GeneradorAutomatico:
                     intentos_sin_exito += 1
                     # Si falla muchas veces + de 100, cancela el intento
                     if intentos_sin_exito > 100:
-                        print(f"Error al asignar: {modulo['nombre']} Profesor ID: {profesor_id}")
+                        nombre_profe = "Desconocido"
+                        for p in self.profesores:
+                            if p['id'] == profesor_id:
+                                nombre_profe = p['nombre']
+                                break
+
+                        mensaje = f"No hay hueco para asignar '{modulo['nombre']}' al profesor {nombre_profe}"
+
+                        # Imprime el mensaje de error en la consola
+                        print(mensaje)
+
+                        # Guarda el mensaje de error en una lista
+                        self.conflictos.append(mensaje)
+
                         return False
         return True
     
