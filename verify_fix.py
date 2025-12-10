@@ -8,11 +8,11 @@ from modelos.modelos import Profesor
 def verify_fix():
     print("Verifying Profesor class fix...")
     try:
-        # Try to create a Profesor with color_hex
+        # Intenta crear Profesor
         p = Profesor(1, "Test", "#FFFFFF", 5, 25)
         print(f"Profesor created successfully: {p.nombre}")
         
-        # Check attributes
+        # Verifica atributos
         if hasattr(p, 'color_hex'):
             print(f"Attribute 'color_hex' found: {p.color_hex}")
         else:

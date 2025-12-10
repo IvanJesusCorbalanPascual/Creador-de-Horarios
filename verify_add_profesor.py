@@ -1,24 +1,24 @@
 import sys
 import os
 
-# Add src to path
+# Agrega src al path
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
 from logica.profesor_manager import ProfesorManager
 from modelos.modelos import Profesor
 
-# Mock db config (not used by the singleton db but required by constructor)
+# Config DB mock
 DB_CONFIG = {}
 
 def verify_add_profesor():
     print("Verifying 'Add Professor' functionality...")
     manager = ProfesorManager(DB_CONFIG)
     
-    # Test Data
+    # Datos prueba
     test_name = "Profesor Prueba Script"
     test_color = "#123456"
     
-    # Create object
+    # Crea objeto
     p = Profesor(None, test_name, test_color, 4, 20)
     
     print(f"Adding professor: {test_name}")
@@ -27,7 +27,7 @@ def verify_add_profesor():
     if new_id:
         print(f"SUCCESS: Professor added with ID: {new_id}")
         
-        # Verify cleaning up (delete)
+        # Verifica limpieza
         print(f"Cleaning up (deleting ID {new_id})...")
         if manager.delete_profesor(new_id):
              print("SUCCESS: Test professor deleted.")

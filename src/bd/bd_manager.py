@@ -12,7 +12,7 @@ class DBManager:
 
     # --- CICLOS ---
     def obtener_ciclos(self):
-            # Devuelve todos los ciclos (DAM1, DAW2, etc...)
+            # Obtiene todos los ciclos (DAM1, etc.)
             try:
                 return self.client.table("ciclos").select("*").execute().data
             except Exception as e:
@@ -44,16 +44,16 @@ class DBManager:
             return []
 
     def obtener_profesores_por_ciclo(self, ciclo_id: int):
-        # Devuelve los profesores asignados a un ciclo especifico
+        # Obtiene profesores de un ciclo específico
         try:
-            # Seleccionamos la relacion. Supabase devuelve: [{'profesor_id': 1, 'profesores': {'nombre': ...}}]
+            # Obtiene relación profesor-ciclo
             res = self.client.table("profesor_ciclo").select("profesor_id, profesores(*)").eq("ciclo_id", ciclo_id).execute()
             
-            # Limpiamos la respuesta para devolver una lista de objetos profesor plana
+            # Simplifica la lista de profesores
             lista_profesores = []
             for item in res.data:
                 if item.get('profesores'):
-                    # Flatten the dict
+                    # Extrae datos del profesor
                     profe = item['profesores']
                     lista_profesores.append(profe)
             if lista_profesores:
@@ -79,21 +79,12 @@ class DBManager:
             return None
 
     def agregar_o_editar_profesor(self, datos: dict):
-        """
-        Permite añadir o editar un profesor manualmente pasandole un diccionario
-        'nombre': '...', 'horas_max_dia': '...', etc... (DEBE COINCIDIR)
-        Si existe este id, el profesor se actualizará, sino, se creará
-        """
-
+        # Añade o edita profesor ('nombre', 'horas_max_dia', etc.)
         try:
-            if "id" in datos and datos["id"]: # Si existe un profesor con este id, se actualizan los nuevos datos
-                # Almacenando la Primary Key de datos (id)
+            if "id" in datos and datos["id"]: # Si tiene ID, actualiza
+                # Guarda ID y copia datos para no modificar original
                 pk = datos["id"]
-
-                # Creando una copia de datos para no modificar el original hasta que termine la operacion
                 datos_update = datos.copy()
-
-                # Eliminando la PK de la copia para no actualizarla
                 del datos_update["id"]
                 print(f"Actualizando profesor ID {pk} con: {datos_update}")
                 res = self.client.table("profesores").update(datos_update).eq("id", pk).execute()
@@ -101,8 +92,7 @@ class DBManager:
                 if not res.data:
                     print(f"ADVERTENCIA: No se actualizó ningún registro con ID {pk}")
                 return res
-            
-            else: # Si no hay id entones se crea / inserta un el nuevo profesor en la bd
+            else: # Si no tiene ID, crea uno nuevo
                 print(f"Creando profesor: {datos}")
                 res = self.client.table("profesores").insert(datos).execute()
                 print(f"Respuesta Supabase (Insert): {res}")
@@ -116,13 +106,13 @@ class DBManager:
             
     def eliminar_profesor(self, id_profesor: int):
         try:
-            # Eliminar relaciones en otras tablas antes de borrar el profesor
+            # Borra relaciones antes de eliminar al profesor
             self.client.table("profesor_ciclo").delete().eq("profesor_id", id_profesor).execute()
             self.client.table("competencia_profesor").delete().eq("profesor_id", id_profesor).execute()
             self.client.table("preferencias").delete().eq("profesor_id", id_profesor).execute()
             self.client.table("horario_generado").delete().eq("profesor_id", id_profesor).execute()
 
-            # Finalmente, eliminar el profesor
+            # Borra el profesor
             res = self.client.table("profesores").delete().eq("id", id_profesor).execute()
             print(f"Profesor borrado: {res.data}")
             return res.data
@@ -132,7 +122,7 @@ class DBManager:
 
     # --- MÓDULOS ---
     def obtener_modulos(self):
-        # Devuelve la informacion del modulo
+        # Obtiene datos de módulos
         try:
             return self.client.table("modulos").select("*, ciclos(nombre)").execute().data
         except Exception as e:
@@ -148,7 +138,7 @@ class DBManager:
            
             lista_final = []
             for m in res.data:
-                # Obtenemos el nombre del dict anidado si existe, sino, es None
+                # Obtiene nombre del profesor o 'Sin Asignar'
                 nombre_profe = "Sin Asignar"
                 if m.get('profesores'):
                     nombre_profe = m['profesores'].get('nombre', "Sin Asignar")
@@ -170,9 +160,9 @@ class DBManager:
             return []
         
     def obtener_profesores_por_modulo(self, modulo_id: int):
-        # Devuelve la lista de nombres de profesores que pueden impartir un módulo
+        # Obtiene profesores capacitados para un módulo
         try:
-            # Consulta: de competencia, trae el nombre del profesor que coincide con el modulo_id
+            # Consulta competencias del módulo
             query = "profesor_id, profesores(nombre)"
 
             res = self.client.table("competencia_profesor")\
@@ -180,10 +170,10 @@ class DBManager:
                 .eq("modulo_id", modulo_id)\
                 .execute()
             
-            # Limpiamos la respuesta para que sea fácil de usar en PyQt
+            # Simplifica lista para UI
             lista_profes = []
             for item in res.data:
-                if item.get('profesores'): # Verificar que la relación existe
+                if item.get('profesores'): # Verifica relación
                     profesor_data = {
                         'id': item['profesores']['id'],
                         'nombre': item['profesores']['nombre']
@@ -205,7 +195,7 @@ class DBManager:
 
     def actualizar_modulo(self, id_modulo: int, datos: dict):
         try:
-            # Remove id from datos if present to avoid changing PK
+            # Quita ID si existe para no duplicar
             if 'id' in datos:
                 del datos['id']
             res = self.client.table("modulos").update(datos).eq("id", id_modulo).execute()
@@ -224,7 +214,7 @@ class DBManager:
 
     # --- COMPETENCIA ---
     def asignar_competencia(self, profesor_id: int, modulo_id: int):
-        # Asigna un modulo a un profesor
+        # Asigna módulo a profesor
         try:
             datos = {"profesor_id": profesor_id, "modulo_id": modulo_id}
             res = self.client.table("competencia_profesor").insert(datos).execute()
@@ -234,15 +224,15 @@ class DBManager:
             return None
 
     def obtener_competencias_profesor(self, profesor_id: int):
-        # Devuelve los modulos que puede dar un profesor
+        # Obtiene módulos que puede dar un profesor
         try:
-            # Trae info de la tabla modulos a través de la relación
+            # Obtiene módulos y ciclos relacionados
             query = "modulo_id, modulos(*, ciclos(nombre))"
             res = self.client.table("competencia_profesor")\
                 .select(query)\
                 .eq("profesor_id", profesor_id)\
                 .execute()
-            # Limpiando la respuesta para devolver solo la lista de módulos
+            # Extrae solo la lista de módulos
             return [item['modulos'] for item in res.data if item['modulos']]
         except Exception as e:
             print(f"Error obtener_competencias: {e}")
@@ -250,16 +240,7 @@ class DBManager:
 
     # --- PREFERENCIAS ---
     def agregar_preferencia(self, datos: dict):
-        """
-        datos: {
-            'profesor_id': 1, 
-            'dia_semana': 0, (0=Lunes según tu lógica)
-            'hora_inicio': '08:00', 
-            'hora_fin': '10:00', 
-            'nivel_prioridad': 1,
-            'motivo': 'Médico'
-        }
-        """
+        # Ejemplo datos: {'profesor_id': 1, 'dia_semana': 0, ...}
         try:
             res = self.client.table("preferencias").insert(datos).execute()
             return res.data
@@ -281,7 +262,7 @@ class DBManager:
             return []
         
     def guardar_horario_generado(self, lista_horarios, ids_modulos_afectados):
-        # Recibe una lista de diccionarios para insertarla de golpe en la bd
+        # Inserta lista de horarios generados
         try:
             if ids_modulos_afectados:
                 self.client.table("horario_generado").delete().in_("modulo_id", ids_modulos_afectados).execute()
