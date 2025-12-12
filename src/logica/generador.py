@@ -2,51 +2,52 @@ import sys
 import os
 import random
 
-# Configuración de rutas
+# Bloque para detectar las rutas correctamente
 ruta_actual = os.path.dirname(os.path.abspath(__file__))
 ruta_raiz = os.path.abspath(os.path.join(ruta_actual, '..', '..'))
 sys.path.append(ruta_raiz)
 
 from src.bd.bd_manager import db
-from src.logica.gestor_preferencias import GestorPreferencias
+from src.managers.gestor_preferencias import GestorPreferencias
 from src.logica.validador import Validador
 
 class GeneradorAutomatico:
     def __init__(self):
         print("Inicializando el generador...")
 
-        # Módulos auxiliares
+        # Estas son nuestras herramientas
         self.db = db
         self.gest_pref = GestorPreferencias()
         self.validador = Validador()
 
         self.profesores = []
         self.modulos = []
-        # Conflictos encontrados
+        # Lista que guarda los conflictos
         self.conflictos = []
         self.advertencias = []
 
-        # Horario generado
+        # Aqui se guarda el horario generado
         self.profesores_por_modulo = {}
 
-        # Control de ocupación
+        # Evita duplicados de profesor
         self.asignaciones = {}
+
+        # Evita duplicados de grupo/alumnos
         self.ocupacion_grupos = {}
 
 
-
-
-    # Obtiene y filtra datos iniciales
+    # Descarga los datos de Supabase antes de empezar y filtra por ciclos
     def preparar_datos_supabase(self, ciclo_filtro_id=None):
         print("Descargando los datos necesarios de Supabase...")
 
-        # Carga datos
+        # Carga los datos
         self.profesores = self.db.obtener_profesores()
+        # Descarga todos
         todos_modulos = self.db.obtener_modulos()
 
         if ciclo_filtro_id:
             print(f"Filtrando para el ciclo ID: {ciclo_filtro_id}")
-            # Filtra por ciclo
+            # Se queda solo los módulos de este ciclo
             self.modulos = [m for m in todos_modulos if m.get('ciclo_id') == ciclo_filtro_id]
         else:
             self.modulos = todos_modulos
@@ -62,8 +63,9 @@ class GeneradorAutomatico:
             for modulo in self.modulos:
                 self.profesores_por_modulo[modulo['id']] = []
 
-            # Reinicia estructuras
+            # Limpia asignaciones previas
             self.asignaciones = {}
+
             self.ocupacion_grupos = {}
             
         except Exception as e:
@@ -73,10 +75,10 @@ class GeneradorAutomatico:
         print(f"Los datos se han encontrado y preparado correctamente. Asignaturas a procesor: {len(self.modulos)}")
         return True
         
-    # Ejecuta proceso principal
+    # Comprueba que todo carga al ejecutarse
     def ejecutar(self, ciclo_id = None):
 
-        # Reinicia conflictos
+        # Limpia los conflictos 
         self.conflictos = []
         # Limpia las advertencias
         self.advertencias = []
@@ -93,13 +95,14 @@ class GeneradorAutomatico:
             print("Ha habido un conflicto con preferencias personales (2).")
             print("Reintentando teniendo en cuenta solo restricciones obligatorias (1)")
 
-            # Reinicia para reintento
+            # Limpia completamente para intentarlo de nuevo
+            self.conflictos = []
             self.asignaciones = {}
             self.ocupacion_grupos = {}
             for modulo in self.modulos:
                 self.profesores_por_modulo[modulo['id']] = []
 
-            # Reintento ignorando preferencias leves
+            # Ignora las preferencias leves en el 2º intento
             if self.calcular_distribucion(ignorar_preferencias_leves=True):
                 print("Horario generado exitosamente, han sido ignoradas las preferencias leves")
 
@@ -119,10 +122,10 @@ class GeneradorAutomatico:
         # Lista de IDs que han sido procesados
         ids_afectados = list(self.profesores_por_modulo.keys())
 
-        # Procesa horario generado
+        # Recorre el resultado en la memoria
         for modulo_id, clases in self.profesores_por_modulo.items():
             for clase in clases:
-                # Obtiene hora real
+                # Convierte el numero de horas a hora real
                 h_inicio, h_fin = self.convertir_indice_a_hora(clase['hora'])
                 
                 fila = {
@@ -145,7 +148,7 @@ class GeneradorAutomatico:
     def obtener_horas_para_ordenar(self, modulo):
         return modulo['horas_semanales']
     
-    # Convierte índice a horario real
+    # Traduce los numeros a horas reales para comparar con las preferencias
     def convertir_indice_a_hora(self, indice):
         mapa = {
             1: ("08:00:00", "09:00:00"),
@@ -161,7 +164,7 @@ class GeneradorAutomatico:
         dias_semana = [0, 1, 2, 3, 4]
         horas_lectivas = [1, 2, 3, 4, 5, 6]
 
-        # Prioriza módulos con más horas
+        # Ordena de mayor a menor colocando primero las asignaturas grandes
         modulos_ordenados = sorted(self.modulos, key=self.obtener_horas_para_ordenar, reverse=True)
 
         for modulo in modulos_ordenados:
@@ -184,7 +187,7 @@ class GeneradorAutomatico:
             intentos_sin_exito = 0
             while horas_pendientes > 0:
                 asignado = False
-                # Aleatoriza días
+                # Prueba días aleatorios para hacerlo variado
                 random.shuffle(dias_semana)
 
                 for dia in dias_semana:
@@ -196,32 +199,32 @@ class GeneradorAutomatico:
                         continue
 
                     for hora in horas_lectivas:
-                        # Verifica ocupación del profesor
+                        # Valida si el profesor esta ocupado
                         ocupado = (profesor_id, dia, hora)
                         if ocupado in self.asignaciones:
                             continue
 
-                        # Verifica ocupación del grupo
+                        # Si se tiene clase a esta hora no permite poner otra
                         if ciclo_id and (ciclo_id, dia, hora) in self.ocupacion_grupos:
                             continue
                         
-                        # Obtiene horario
+                        # Traduce en numero de hora a String
                         h_inicio, h_fin = self.convertir_indice_a_hora(hora)
 
                         nivel_de_conflicto = self.gest_pref.comprobar_conflicto(profesor_id, dia, h_inicio, h_fin)
 
-                        # Evita conflicto crítico
+                        # Salta si el nivel de conflicto es 1
                         if nivel_de_conflicto == 1:
                             continue
 
-                        # Evita preferencia personal
+                        # Siendo preferencia, salta solo si no estamos ignorandolas
                         if nivel_de_conflicto == 2 and not ignorar_preferencias_leves:
                             continue
 
-                        # Asigna hueco
+                        # Asigna los huecos
                         self.asignaciones[ocupado] = modulo['id']
 
-                        # Marca grupo ocupado
+                        # Marca el grupo como ocupado
                         if ciclo_id:
                             self.ocupacion_grupos[(ciclo_id, dia, hora)] = modulo['id']
 
@@ -234,7 +237,7 @@ class GeneradorAutomatico:
 
                 if not asignado:
                     intentos_sin_exito += 1
-                    # Aborta tras fallos reiterados
+                    # Si falla muchas veces + de 100, cancela el intento
                     if intentos_sin_exito > 100:
                         nombre_profe = "Desconocido"
                         for p in self.profesores:
@@ -254,7 +257,7 @@ class GeneradorAutomatico:
         return True
     
     def contar_horas_modulo_dia(self, modulo_id, dia):
-        # Cuenta horas diarias del módulo
+        # Cuenta cuantas horas lleva ya este modulo en este día
         count = 0
         if modulo_id in self.profesores_por_modulo:
             for clase in self.profesores_por_modulo[modulo_id]:
