@@ -264,8 +264,3 @@ class GeneradorAutomatico:
                 if clase['dia'] == dia:
                     count += 1
         return count
-
-# --- Zona de pruebas ---
-if __name__ == "__main__":
-    generador = GeneradorAutomatico()
-    generador.ejecutar()
