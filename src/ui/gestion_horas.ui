@@ -28,6 +28,12 @@
     <layout class="QHBoxLayout" name="horizontalLayout_acciones">
      <item>
       <widget class="QPushButton" name="btn_add">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>35</height>
+        </size>
+       </property>
        <property name="text">
         <string>Añadir Hora</string>
        </property>
@@ -38,6 +44,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="btn_del">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>35</height>
+        </size>
+       </property>
        <property name="styleSheet">
         <string notr="true">background-color: #f44336; color: white; padding: 5px;</string>
        </property>
@@ -55,6 +67,12 @@
     <layout class="QHBoxLayout" name="horizontalLayout_final">
      <item>
       <widget class="QPushButton" name="btn_save">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>35</height>
+        </size>
+       </property>
        <property name="styleSheet">
         <string notr="true">background-color: #4CAF50; color: white; padding: 5px;</string>
        </property>
@@ -68,6 +86,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="btn_cancel">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>35</height>
+        </size>
+       </property>
        <property name="text">
         <string>Cancelar</string>
        </property>
