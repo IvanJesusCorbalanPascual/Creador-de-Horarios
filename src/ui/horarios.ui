@@ -927,35 +927,56 @@ color:white;</string>
               <property name="text">
                <string>8:30</string>
               </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
              </row>
              <row>
               <property name="text">
                <string>9:25</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
               </property>
              </row>
              <row>
               <property name="text">
                <string>10:20</string>
               </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
              </row>
              <row>
               <property name="text">
                <string>11:15</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
               </property>
              </row>
              <row>
               <property name="text">
                <string>11:45</string>
               </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
              </row>
              <row>
               <property name="text">
                <string>12:40</string>
               </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
+              </property>
              </row>
              <row>
               <property name="text">
                <string>13:35</string>
+              </property>
+              <property name="textAlignment">
+               <set>AlignCenter</set>
               </property>
              </row>
              <column>
