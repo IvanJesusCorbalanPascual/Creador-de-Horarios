@@ -2,6 +2,7 @@ import sys, os
 from PyQt5.QtWidgets import QApplication
 from src.views.main_window import MiAplicacion
 from src.config import GREEN_TONIC_STYLE
+import src.media.recursos_rc
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
