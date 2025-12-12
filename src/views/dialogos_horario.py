@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTableWidget, 
-                             QTableWidgetItem, QPushButton, QMessageBox, QHeaderView, 
+import os
+from PyQt5 import uic
+from PyQt5.QtWidgets import (QDialog, QTableWidgetItem, QMessageBox, QHeaderView, 
                              QTimeEdit, QAbstractItemView)
 from PyQt5.QtCore import Qt, QTime
 from datetime import datetime, timedelta
@@ -7,47 +8,18 @@ from datetime import datetime, timedelta
 class DialogoGestionHoras(QDialog):
     def __init__(self, parent=None, config_manager=None):
         super().__init__(parent)
-        self.setWindowTitle("Gestionar Horas del Horario")
-        self.resize(600, 500) # Más ancho para que se vea bien
+        uic.loadUi(os.path.join("src", "ui", "gestion_horas.ui"), self)
         self.config_manager = config_manager
         
-        # Layout Principal
-        self.layout = QVBoxLayout(self)
+        # Alias para compatibilidad con código existente
+        self.tabla = self.tabla_horas
 
-        # Tabla
-        self.tabla = QTableWidget()
+        # Configuración de Tabla (headers y tamaños no definidos en UI)
         self.tabla.setColumnCount(3)
         self.tabla.setHorizontalHeaderLabels(["Hora Inicio", "Hora Fin", "Recreo"])
         self.tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        # Establece un ancho mínimo de columna para evitar "fino"
         self.tabla.horizontalHeader().setMinimumSectionSize(120)
-        # Establece un alto de fila mayor para que no corte los números
         self.tabla.verticalHeader().setDefaultSectionSize(45)
-        
-        self.tabla.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tabla.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.layout.addWidget(self.tabla)
-
-        # Botones de Acción
-        btn_layout = QHBoxLayout()
-        self.btn_add = QPushButton("Añadir Hora")
-        self.btn_del = QPushButton("Eliminar Seleccionada")
-        btn_layout.addWidget(self.btn_add)
-        btn_layout.addWidget(self.btn_del)
-        self.layout.addLayout(btn_layout)
-
-        # Botones Aceptar/Cancelar
-        final_layout = QHBoxLayout()
-        self.btn_save = QPushButton("Guardar Cambios")
-        self.btn_cancel = QPushButton("Cancelar")
-        
-        # Estilos básicos
-        self.btn_save.setStyleSheet("background-color: #4CAF50; color: white; padding: 5px;")
-        self.btn_del.setStyleSheet("background-color: #f44336; color: white; padding: 5px;")
-
-        final_layout.addWidget(self.btn_save)
-        final_layout.addWidget(self.btn_cancel)
-        self.layout.addLayout(final_layout)
 
         # Conexiones
         self.btn_add.clicked.connect(self.agregar_fila)
