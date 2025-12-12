@@ -60,7 +60,6 @@ class MiAplicacion(QMainWindow):
         self.btn_horarios.clicked.connect(lambda: self.cambiar_pagina(2))
         self.btn_agregar_ciclo.clicked.connect(self.agregar_nuevo_ciclo)
         self.btn_eliminar_ciclo.clicked.connect(self.eliminar_ciclo_actual)
-        self.btn_eliminar_ciclo.clicked.connect(self.eliminar_ciclo_actual)
         self.btn_exportar_csv.clicked.connect(self.exportar_horario)
         self.btn_gestionar_horas.clicked.connect(self.abrir_gestion_horas)
         

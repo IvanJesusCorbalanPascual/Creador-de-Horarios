@@ -147,8 +147,11 @@ class DBManager:
             for m in res.data:
                 # Obtenemos el nombre del dict anidado si existe, sino, es None
                 nombre_profe = "Sin Asignar"
+                color_profe = None # Default color if no professor
+
                 if m.get('profesores'):
                     nombre_profe = m['profesores'].get('nombre', "Sin Asignar")
+                    color_profe = m['profesores'].get('color_hex')
                 
                 item = {
                     'id': m['id'],
@@ -157,7 +160,7 @@ class DBManager:
                     'horas_max_dia': m.get('horas_max_dia', 0),
                     'profesor_id': m.get('profesor_id'),
                     'nombre_profesor': nombre_profe,
-                    'color_profesor': m.get('profesores').get('color_hex')      
+                    'color_profesor': color_profe      
                 }
                 lista_final.append(item)
                 
