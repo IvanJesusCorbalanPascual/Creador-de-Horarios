@@ -1,6 +1,7 @@
 import os
 from PyQt5 import uic
-from PyQt5.QtWidgets import QDialog, QMessageBox, QLabel, QComboBox, QVBoxLayout, QAbstractItemView, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import (QDialog, QMessageBox, QLabel, QComboBox, QVBoxLayout, 
+                             QAbstractItemView, QTableWidgetItem, QHeaderView, QHBoxLayout, QPushButton)
 from PyQt5.QtCore import Qt
 from src.bd.bd_manager import db
 from src.managers.profesor_manager import ProfesorManager
@@ -221,3 +222,38 @@ class DialogoListaPreferencias(QDialog):
                 self.cargar_datos()
             else:
                 QMessageBox.critical(self, "Error", "No ha sido posible eliminar")
+
+class DialogoSeleccionarProfesor(QDialog):
+    def __init__(self, parent=None, profesores_disponibles=[]):
+        super().__init__(parent)
+        self.setWindowTitle("Seleccionar Profesor Existente")
+        self.resize(400, 150)
+        self.profesor_seleccionado_id = None
+        
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("Selecciona un profesor para añadir a este ciclo:"))
+        
+        self.combo = QComboBox()
+        for p in profesores_disponibles:
+            self.combo.addItem(p.nombre, p.id)
+            
+        layout.addWidget(self.combo)
+        
+        # Botones
+        btn_layout = QHBoxLayout()
+        btn_ok = QPushButton("Añadir")
+        btn_cancel = QPushButton("Cancelar")
+        
+        btn_ok.clicked.connect(self.accept)
+        btn_cancel.clicked.connect(self.reject)
+        
+        btn_layout.addWidget(btn_ok)
+        btn_layout.addWidget(btn_cancel)
+        layout.addLayout(btn_layout)
+        
+    def accept(self):
+        self.profesor_seleccionado_id = self.combo.currentData()
+        if self.profesor_seleccionado_id:
+            super().accept()
+        else:
+            QMessageBox.warning(self, "Aviso", "Debes seleccionar un profesor")

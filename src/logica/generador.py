@@ -10,6 +10,7 @@ sys.path.append(ruta_raiz)
 from src.bd.bd_manager import db
 from src.managers.gestor_preferencias import GestorPreferencias
 from src.logica.validador import Validador
+from src.managers.config_manager import ConfigManager
 
 class GeneradorAutomatico:
     def __init__(self):
@@ -19,6 +20,7 @@ class GeneradorAutomatico:
         self.db = db
         self.gest_pref = GestorPreferencias()
         self.validador = Validador()
+        self.config_manager = ConfigManager()
 
         self.profesores = []
         self.modulos = []
@@ -152,19 +154,33 @@ class GeneradorAutomatico:
     
     # Traduce los numeros a horas reales para comparar con las preferencias
     def convertir_indice_a_hora(self, indice):
-        mapa = {
-            1: ("08:00:00", "09:00:00"),
-            2: ("09:00:00", "10:00:00"),
-            3: ("10:00:00", "11:00:00"),
-            4: ("11:30:00", "12:30:00"),
-            5: ("12:30:00", "13:30:00"),
-            6: ("13:30:00", "14:30:00")
-        }
-        return mapa.get(indice, ("00:00:00", "00:00:00"))
+        # Indice es 0-based ahora porque range devuelve 0...N
+        # Pero el código original usaba 1...6. Vamos a adaptar para usar indices 0-based internamente
+        horas = self.config_manager.obtener_horas()
+        
+        # Proteccion bounds
+        if 0 <= indice < len(horas):
+            item = horas[indice]
+            if isinstance(item, dict):
+                return item.get("inicio"), item.get("fin")
+            else:
+                # Legacy fallback
+                import datetime # Should ideally be at top but local scope is safe
+                from datetime import datetime, timedelta
+                try: 
+                    d = datetime.strptime(item, "%H:%M:%S") 
+                    fin = (d + timedelta(hours=1)).strftime("%H:%M:%S")
+                    return item, fin
+                except: return "00:00:00", "00:00:00"
+        
+        return "00:00:00", "00:00:00"
        
     def calcular_distribucion(self, ignorar_preferencias_leves):
         dias_semana = [0, 1, 2, 3, 4]
-        horas_lectivas = [1, 2, 3, 4, 5, 6]
+        
+        # Ahora cargamos las horas DINAMICAMENTE
+        num_horas = len(self.config_manager.obtener_horas())
+        horas_lectivas = list(range(num_horas)) # [0, 1, 2, ... N-1]
 
         # Ordena de mayor a menor colocando primero las asignaturas grandes
         modulos_ordenados = sorted(self.modulos, key=self.obtener_horas_para_ordenar, reverse=True)

@@ -14,9 +14,12 @@ from src.managers.exportador_manager import ExportadorManager
 from src.managers.gestor_preferencias import GestorPreferencias
 
 # Importación de Diálogos
-from src.views.dialogos import DialogoProfesor
+from src.views.dialogos import DialogoProfesor, DialogoSeleccionarProfesor
 from src.views.dialogos import DialogoModulo
 from src.views.dialogos import DialogoListaPreferencias
+from src.views.dialogos_horario import DialogoGestionHoras
+from src.managers.config_manager import ConfigManager
+from PyQt5.QtWidgets import QPushButton, QSizePolicy
 
 # Configuración y DB
 from src.bd.bd_manager import db
@@ -35,6 +38,7 @@ class MiAplicacion(QMainWindow):
         # Cargando la vista principal
         uic.loadUi("src/ui/horarios.ui", self) 
         self.setWindowTitle("Gestor de Ciclos")
+        self.config_manager = ConfigManager()
         self.profesor_manager = ProfesorManager(DB_CONFIG)
         self.cargar_ciclos_db() # Cargar ciclos al inicio
         self.btn_generar_auto.clicked.connect(self.ejecutar_generador)
@@ -56,7 +60,9 @@ class MiAplicacion(QMainWindow):
         self.btn_horarios.clicked.connect(lambda: self.cambiar_pagina(2))
         self.btn_agregar_ciclo.clicked.connect(self.agregar_nuevo_ciclo)
         self.btn_eliminar_ciclo.clicked.connect(self.eliminar_ciclo_actual)
+        self.btn_eliminar_ciclo.clicked.connect(self.eliminar_ciclo_actual)
         self.btn_exportar_csv.clicked.connect(self.exportar_horario)
+        self.btn_gestionar_horas.clicked.connect(self.abrir_gestion_horas)
         
         # Conexiones de botones de Profesores
         self.btn_agregar_profe.clicked.connect(self.agregar_profesor)
@@ -182,16 +188,47 @@ class MiAplicacion(QMainWindow):
 
     def agregar_profesor(self):
         # Abre el dialogo para agregar un profesor
-        dialogo = DialogoProfesor(self)
+        ciclo_id = self.combo_ciclos.currentData()
 
-        """
-        Abre el dialogo para agregar un profesor
-        ciclo_id = self.combo_ciclos.currentData() # Obtener ID del ciclo actual
-        dialogo = DialogoProfesor(self, ciclo_id=ciclo_id)
-        """
+        # Preguntar al usuario
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Añadir Profesor")
+        msg_box.setText("¿Cómo quieres añadir el profesor?")
+        btn_nuevo = msg_box.addButton("Crear Nuevo", QMessageBox.ActionRole)
+        btn_existente = msg_box.addButton("Añadir Existente", QMessageBox.ActionRole) if ciclo_id else None
+        btn_cancel = msg_box.addButton("Cancelar", QMessageBox.RejectRole)
+        
+        msg_box.exec_()
+        
+        if msg_box.clickedButton() == btn_cancel:
+            return
 
-        if dialogo.exec_() == QDialog.Accepted:
-            self.cargar_profesores() # Recargar la tabla tras el exito
+        if msg_box.clickedButton() == btn_nuevo:
+             # DialogoProfesor maneja la creación y asignación si se le pasa ciclo_id
+             dialogo = DialogoProfesor(self, ciclo_id=ciclo_id)
+             if dialogo.exec_() == QDialog.Accepted:
+                 self.cargar_profesores()
+
+        elif btn_existente and msg_box.clickedButton() == btn_existente:
+             # Lógica para seleccionar existente
+             todos_profes = self.profesor_manager.get_all_profesores()
+             profes_ciclo = self.profesor_manager.get_profesores_by_ciclo_id(ciclo_id)
+             ids_en_ciclo = [p.id for p in profes_ciclo]
+             
+             # Filtrar: Solo los que NO están ya en el ciclo
+             disponibles = [p for p in todos_profes if p.id not in ids_en_ciclo]
+             
+             if not disponibles:
+                 QMessageBox.information(self, "Aviso", "No hay profesores disponibles para añadir (todos asignados o inexistentes).")
+                 return
+                 
+             dialogo_sel = DialogoSeleccionarProfesor(self, disponibles)
+             if dialogo_sel.exec_() == QDialog.Accepted:
+                 pid = dialogo_sel.profesor_seleccionado_id
+                 if self.profesor_manager.assign_profesor_to_cycle(pid, ciclo_id):
+                     self.cargar_profesores()
+                 else:
+                     QMessageBox.critical(self, "Error", "Fallo al asignar profesor al ciclo")
 
     def editar_profesor(self):
         # Abre el dialogo para editar el profesor seleccionado
@@ -402,16 +439,28 @@ class MiAplicacion(QMainWindow):
             if not datos:
                 return
             
-            # Convierta una hora en un número de cada fila
-            mapa_filas = {
-                "08:00:00": 0,
-                "09:00:00": 1,
-                "10:00:00": 2,
-                "10:30:00": 3, 
-                "11:30:00": 4,
-                "12:30:00": 5,
-                "13:30:00": 6
-            } 
+            # Obtiene las horas configuradas
+            horas_configuradas = self.config_manager.obtener_horas()
+            
+            # Configura la tabla visualmente (Filas)
+            self.tabl_horario_grid.setRowCount(len(horas_configuradas))
+            
+            # Extraer solo la hora de inicio para las etiquetas, manejando dict o str
+            etiquetas_filas = []
+            mapa_filas = {}
+            mapa_filas_reverse = {} # Key: Index, Val: Hora Inicio str
+
+            for i, h in enumerate(horas_configuradas):
+                if isinstance(h, dict):
+                    hora_str = h.get("inicio", "00:00:00")
+                else: 
+                    hora_str = h # Legacy fallback
+                
+                etiquetas_filas.append(hora_str[:5])
+                mapa_filas[hora_str] = i
+                mapa_filas_reverse[i] = hora_str
+
+            self.tabl_horario_grid.setVerticalHeaderLabels(etiquetas_filas) 
 
             for clase in datos:
 
@@ -439,11 +488,17 @@ class MiAplicacion(QMainWindow):
                 color_hex = info_profe['color_hex'] if info_profe and info_profe.get('color_hex') else "#ffffff"
 
 
-                # Busca la fila correspondiente
+                # Busca la fila correspondiente usando las horas dinámicas
                 if hora in mapa_filas:
-                    fila = mapa_filas[hora]
+                     fila = mapa_filas[hora]
                 else:
-                    continue # Si no es igual la hora que en la tabla lo salta
+                    # Intento de matching parcial si falla exacto (por segundos 00)
+                    fila = -1
+                    for h_str, f_idx in mapa_filas.items():
+                         if h_str.startswith(hora[:5]):
+                             fila = f_idx
+                             break
+                    if fila == -1: continue 
 
                 # Crea la celda
                 txt_celda = f"{nombre_modulo}"
@@ -511,16 +566,16 @@ class MiAplicacion(QMainWindow):
         if not modulo_id:
             return
         
-        # Mapea la fila visual a la hora real
-        mapa_horas = {
-            0: "08:00:00",
-            1: "09:00:00",
-            2: "10:00:00",
-            3: "10:30:00", 
-            4: "11:30:00",
-            5: "12:30:00",
-            6: "13:30:00"
-        }
+        # Mapea la fila visual a la hora real MODIFICADO
+        horas_configuradas = self.config_manager.obtener_horas()
+        
+        # Construye el mapa indice -> hora inicio
+        mapa_horas = {}
+        for i, h in enumerate(horas_configuradas):
+             if isinstance(h, dict):
+                 mapa_horas[i] = h.get("inicio")
+             else:
+                 mapa_horas[i] = h
 
         nueva_hora = mapa_horas.get(fila)
 
@@ -625,6 +680,13 @@ class MiAplicacion(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error Crítico", f"Fallo al procesar la exportación: {str(e)}")
 
+    def abrir_gestion_horas(self):
+        # Abre el diálogo de gestión de horas
+        dialogo = DialogoGestionHoras(self, self.config_manager)
+        if dialogo.exec_() == QDialog.Accepted:
+            # Si se guardaron cambios, recargamos el horario para que se redibuje la tabla
+            self.cargar_horario()
+
     def evento_soltar_personalizado(self, event):
         # Obtiene los datos en su origen
         origen = event.source()
@@ -648,11 +710,16 @@ class MiAplicacion(QMainWindow):
         # Recupera el ID del profesor que se guarda en cargar_horario
         profesor_id = item_origen.data(Qt.UserRole + 1)
 
+
+
         if profesor_id:
-            mapa_horas_comprobar = {
-                0: "08:00:00", 1: "09:00:00", 2: "10:00:00", 3: "10:30:00", 
-                4: "11:30:00", 5: "12:30:00", 6: "13:30:00"
-            }
+            horas_configuradas = self.config_manager.obtener_horas()
+            mapa_horas_comprobar = {}
+            for i, h in enumerate(horas_configuradas):
+                 if isinstance(h, dict):
+                     mapa_horas_comprobar[i] = h.get("inicio")
+                 else:
+                     mapa_horas_comprobar[i] = h
 
             hora_inicio_check = mapa_horas_comprobar.get(fila_destino)
 
@@ -697,15 +764,14 @@ class MiAplicacion(QMainWindow):
         if item_objeto_destino:
             self.tabl_horario_grid.setItem(fila_origen, col_origen, item_objeto_destino)
 
-        mapa_horas = {
-            0: "08:00:00",
-            1: "09:00:00", 
-            2: "10:00:00", 
-            3: "10:30:00", 
-            4: "11:30:00", 
-            5: "12:30:00", 
-            6: "13:30:00"
-        }
+        # Recalcular el mapa indices
+        horas_configuradas = self.config_manager.obtener_horas()
+        mapa_horas = {}
+        for i, h in enumerate(horas_configuradas):
+             if isinstance(h, dict):
+                 mapa_horas[i] = h.get("inicio")
+             else:
+                 mapa_horas[i] = h
         
 
         # Función que suma 1 hora al tiempo

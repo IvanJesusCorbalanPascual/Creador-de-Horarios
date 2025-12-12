@@ -48,7 +48,7 @@ QPushButton#btn_exportar_csv:pressed {
 
 /* --- Botones Superiores (Acciones Principales: Agregar/Editar) --- */
 QPushButton#btn_editar_modulo, QPushButton#btn_editar_profe,
-QPushButton#btn_preferencias, QPushButton#btn_generar_auto {
+QPushButton#btn_preferencias, QPushButton#btn_generar_auto, QPushButton#btn_gestionar_horas {
     background-color: #F5F9FF; /* Fondo azulado muy pálido */
     color: #1565C0;            /* Texto azul */
     border: 2px solid #1565C0; /* Borde azul */
@@ -57,14 +57,14 @@ QPushButton#btn_preferencias, QPushButton#btn_generar_auto {
 
 /* --- HOVER para Botones Superiores --- */
 QPushButton#btn_editar_modulo:hover, QPushButton#btn_editar_profe:hover,
-QPushButton#btn_preferencias:hover, QPushButton#btn_generar_auto:hover {
+QPushButton#btn_preferencias:hover, QPushButton#btn_generar_auto:hover, QPushButton#btn_gestionar_horas:hover {
     border: 3px solid #1976D2; 
     background-color: #E3F2FD; /* Fondo azul cielo suave */
 }
 
 /* --- ESTADO PRESSED --- */
 QPushButton#btn_editar_modulo:pressed, QPushButton#btn_editar_profe:pressed,
-QPushButton#btn_preferencias:pressed, QPushButton#btn_generar_auto:pressed {
+QPushButton#btn_preferencias:pressed, QPushButton#btn_generar_auto:pressed, QPushButton#btn_gestionar_horas:pressed {
     background-color: #0D47A1; /* Azul oscuro sólido */
     
 }

@@ -823,6 +823,25 @@ color:white;</string>
               </spacer>
              </item>
              <item>
+              <widget class="QPushButton" name="btn_gestionar_horas">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>35</height>
+                </size>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>Gestionar Horas 🕒</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="btn_exportar_csv">
                <property name="minimumSize">
                 <size>
