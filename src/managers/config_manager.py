@@ -9,6 +9,7 @@ class ConfigManager:
             {"inicio": "08:30:00", "fin": "09:25:00"},
             {"inicio": "09:25:00", "fin": "10:20:00"},
             {"inicio": "10:20:00", "fin": "11:15:00"},
+            {"inicio": "11:15:00", "fin": "11:45:00", "es_descanso": True}, # Recreo
             {"inicio": "11:45:00", "fin": "12:40:00"},
             {"inicio": "12:40:00", "fin": "13:35:00"},
             {"inicio": "13:35:00", "fin": "14:30:00"}
