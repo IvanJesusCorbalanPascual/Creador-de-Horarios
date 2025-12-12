@@ -1,5 +1,3 @@
-# src/logica/profesor_manager.py
-
 from src.modelos.modelos import Profesor
 
 from src.bd.bd_manager import db
@@ -7,10 +5,8 @@ from src.bd.bd_manager import db
 class ProfesorManager:
     def __init__(self, db_config):
         self.db_config = db_config
-        # db_config is not strictly needed if we use the singleton db, 
-        # but we keep it for compatibility with existing calls.
 
-    # Mock data for fallback
+    # Datos simulados de respaldo
     _profesores_mock = [
         Profesor(1, "Ana Garcia (Offline)", "#FF5733", 6, 30),
         Profesor(2, "Pedro Lopez (Offline)", "#33FF57", 5, 25),
@@ -18,21 +14,19 @@ class ProfesorManager:
     ]
 
     def get_all_profesores(self):
-        # Carga todos los profesores desde la DB
+        # Carga todos los profesores desde la BD
         data = db.obtener_profesores()
         
         if not data:
-            print("AVISO: Usando datos simulados (Offline Mode)")
             return self._profesores_mock
 
         profesores = []
         for p_data in data:
             # Profesor(id, nombre, color_hex, horas_max_dia, horas_max_semana)
-            # Handle potential missing keys with defaults if necessary, though DB should enforce them.
             prof = Profesor(
                 p_data.get('id'),
                 p_data.get('nombre'),
-                p_data.get('color_hex', '#FFFFFF'), # Default color
+                p_data.get('color_hex', '#FFFFFF'), # Color por defecto
                 p_data.get('horas_max_dia', 0),
                 p_data.get('horas_max_semana', 0)
             )
@@ -56,7 +50,7 @@ class ProfesorManager:
         return profesores
 
     def add_profesor(self, profesor):
-        # Agrega un nuevo profesor a la DB
+        # Agrega un nuevo profesor a la BD
         datos = {
             "nombre": profesor.nombre,
             "color_hex": profesor.color_hex,
@@ -64,7 +58,7 @@ class ProfesorManager:
             "horas_max_semana": profesor.horas_max_semana
         }
         res = db.agregar_o_editar_profesor(datos)
-        # res.data usually contains the list of inserted rows, e.g. [{'id': 10, ...}]
+        # res.data suele contener la lista de filas insertadas, ej. [{'id': 10, ...}]
         if res and res.data and len(res.data) > 0:
             return res.data[0]['id']
         return None

@@ -5,7 +5,6 @@ class ExportadorManager:
 
     def exportar_horario_csv(self, ruta_archivo, datos):
         if not datos:
-            print("No se han podido cargar bien los datos")
             return False
         
         # Definimos los encabezados para el csv

@@ -10,7 +10,6 @@ class ModuloManager:
     def cargar_modulos_en_tabla(self, tabla_widget, id_ciclo_seleccionado):
         if not id_ciclo_seleccionado:
             return
-        print(f"Cargando módulos")
 
         datos = self.bd.obtener_modulos_por_ciclo(id_ciclo_seleccionado)
         tabla_widget.setRowCount(0)
@@ -64,7 +63,8 @@ class ModuloManager:
             tabla_widget.resizeColumnsToContents()
 
         else:
-            print("No se encontraron módulos para este ciclo")
+            # No se encontraron módulos para este ciclo
+            pass
 
     def agregar_modulo(self, datos):
         # Recibe un diccionario con los datos y llama al metodo de la bd

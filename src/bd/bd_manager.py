@@ -9,7 +9,6 @@ KEY = "sb_secret_b_o0X_MZDs9IWdxSs-kuHA_W5mNG5dX"
 class DBManager:
     def __init__(self):
         self.client: Client = create_client(URL, KEY)
-        print("Cliente de Supabase Inicializado")
 
     # --- CICLOS ---
     def obtener_ciclos(self):
@@ -58,6 +57,7 @@ class DBManager:
                     lista_profesores.append(profe)
             if lista_profesores:
                print("Cargando profesores...")
+               pass
             return lista_profesores
         except Exception as e:
             print(f"Error obtener_profesores_por_ciclo: {e}")
@@ -95,17 +95,14 @@ class DBManager:
 
                 # Eliminando la PK de la copia para no actualizarla
                 del datos_update["id"]
-                print(f"Actualizando profesor ID {pk} con: {datos_update}")
                 res = self.client.table("profesores").update(datos_update).eq("id", pk).execute()
-                print(f"Respuesta Supabase (Update): {res}")
                 if not res.data:
-                    print(f"ADVERTENCIA: No se actualizó ningún registro con ID {pk}")
+                    # ADVERTENCIA: No se actualizó ningún registro con ID {pk}
+                    pass
                 return res
             
             else: # Si no hay id entones se crea / inserta un el nuevo profesor en la bd
-                print(f"Creando profesor: {datos}")
                 res = self.client.table("profesores").insert(datos).execute()
-                print(f"Respuesta Supabase (Insert): {res}")
                 return res
             
         except Exception as e:
@@ -123,8 +120,8 @@ class DBManager:
             self.client.table("horario_generado").delete().eq("profesor_id", id_profesor).execute()
 
             # Finalmente, eliminar el profesor
+            # Finalmente, eliminar el profesor
             res = self.client.table("profesores").delete().eq("id", id_profesor).execute()
-            print(f"Profesor borrado: {res.data}")
             return res.data
         except Exception as e:
             print(f"Error al eliminar el profesor: {e}")

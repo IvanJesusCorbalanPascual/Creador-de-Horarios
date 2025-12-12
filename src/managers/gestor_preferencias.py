@@ -28,7 +28,6 @@ class GestorPreferencias:
             self.cache_preferencias = datos
 
         # "len" cuenta cuantos elementos hay en la lista
-        print(f"Se han cargado las preferencias correctamente: {len(self.cache_preferencias)}")
         
 
     def comprobar_conflicto(self, profesor_id, dia, hora_inicio, hora_fin):
@@ -59,27 +58,3 @@ class GestorPreferencias:
 
         # Si no ha devuelto 1, devuelve lo que haya encontrado (0 o 2)
         return conflicto_actual
-    
-# --- ZONA DE PRUEBAS --- (Creado por Gemini para testeo)
-if __name__ == "__main__":
-    gestor = GestorPreferencias()
-    
-    print("\n🕵️ INICIANDO TEST DE GESTOR DE PREFERENCIAS")
-    
-    # 1. Cargar datos reales (debería salir tu print de "cargadas correctamente")
-    gestor.cargar_preferencias()
-    
-    # DATOS DE PRUEBA (Estos tienen que existir en tu Semilla para que funcione)
-    # Revisa en tu 'semilla.py' qué ID le diste a Juan y qué restricción pusiste.
-    # Por defecto en la semilla era: Juan Perez, Lunes (0), 08:00-09:00, Nivel 1.
-    
-    id_juan = 1  # (Asegúrate que este sea el ID correcto mirando tu Supabase o semilla)
-    dia_lunes = 0
-    
-    # CASO 1: Choque frontal (08:00 a 09:00) -> Debería dar 1
-    resultado = gestor.comprobar_conflicto(id_juan, dia_lunes, "08:00:00", "09:00:00")
-    print(f"Prueba Lunes 08:00 (Esperado: 1): {resultado}")
-
-    # CASO 2: Horario libre (11:00 a 12:00) -> Debería dar 0
-    resultado = gestor.comprobar_conflicto(id_juan, dia_lunes, "11:00:00", "12:00:00")
-    print(f"Prueba Lunes 11:00 (Esperado: 0): {resultado}")
