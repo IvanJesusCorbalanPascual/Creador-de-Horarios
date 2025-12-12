@@ -120,7 +120,7 @@ class MiAplicacion(QMainWindow):
 
     def cambiar_ciclo(self):
         ciclo_actual = self.combo_ciclos.currentText()
-        print(f"Ciclo cambiado a {ciclo_actual}")
+        # Ciclo cambiado a {ciclo_actual}
         indice_actual = self.stackedWidget.currentIndex()
         self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el ususario
 
@@ -137,14 +137,14 @@ class MiAplicacion(QMainWindow):
     
     # Metodos para cargar las vistas
     def cargar_profesores(self):
-        print("Cargando profesores...")
+        # Cargando profesores...
         nombre_ciclo = self.combo_ciclos.currentText()
         self.lbl_ciclo_profesor.setText(nombre_ciclo)
         # Obtener ID del ciclo seleccionado
         ciclo_id = self.combo_ciclos.currentData()
         
         if ciclo_id:
-            print(f"Filtrando por ciclo ID: {ciclo_id}")
+            # Filtrando por ciclo ID: {ciclo_id}
             profesores = self.profesor_manager.get_profesores_by_ciclo_id(ciclo_id)
         else:
             profesores = self.profesor_manager.get_all_profesores()
@@ -364,12 +364,12 @@ class MiAplicacion(QMainWindow):
     def cambiar_ciclo(self):
         # Cambia el ciclo seleccionado
         ciclo_actual = self.combo_ciclos.currentText()
-        print(f"Ciclo cambiado a {ciclo_actual}")
+        # Ciclo cambiado a {ciclo_actual}
         indice_actual = self.stackedWidget.currentIndex()
         self.cambiar_pagina(indice_actual) # Carga la misma página en la que estaba el usuario
  
     def cargar_modulos(self):
-        print("cargando modulos...")
+        # cargando modulos...
         nombre_ciclo = self.combo_ciclos.currentText()
         self.lbl_ciclo_modulos.setText(nombre_ciclo)
         ciclo_actual = self.combo_ciclos.currentData()
@@ -383,7 +383,7 @@ class MiAplicacion(QMainWindow):
              print("Error: No se encontro la tabla 'tabla_modulos' en la UI")
  
     def cargar_horario(self):
-        print("Cargando horarios...")
+        # Cargando horarios...
         nombre_ciclo = self.combo_ciclos.currentText()
         self.lbl_ciclo_horario.setText(nombre_ciclo)
 
@@ -506,7 +506,7 @@ class MiAplicacion(QMainWindow):
         modulo_id = item.data(Qt.UserRole)
         nombre_modulo = item.text()
         
-        print(f"Se ha movido: {nombre_modulo} (ID: {modulo_id}) a Día {columna}, Fila {fila}")
+        # Se ha movido: {nombre_modulo} (ID: {modulo_id}) a Día {columna}, Fila {fila}
 
         if not modulo_id:
             return
@@ -532,7 +532,8 @@ class MiAplicacion(QMainWindow):
         exito = self.db.actualizar_movimiento_horario(modulo_id, columna, nueva_hora)
         
         if exito:
-            print("El cambio se ha guardado en la BD correctamente")
+            # El cambio se ha guardado en la BD correctamente
+            pass
         else:
             QMessageBox.warning(self, "Error", "No ha sido posible guardar el movimiento en la BD.\n Volver a su sitio al recargar")
         self.cargar_horario()
@@ -679,9 +680,7 @@ class MiAplicacion(QMainWindow):
                     if res == QMessageBox.No:
                         event.ignore()
                         return
-
-        print(f"Intentando intercambio de celdas: ({fila_origen}), ({col_origen}) | ({fila_destino}), ({col_destino})")
-
+ 
         # Guarda los IDs para tener los datos para la BD por si acaso
         id_horario_origen = item_origen.data(Qt.UserRole)
         item_destino_pre = self.tabl_horario_grid.item(fila_destino, col_destino)

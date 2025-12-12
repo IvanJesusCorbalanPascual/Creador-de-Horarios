@@ -13,7 +13,7 @@ from src.logica.validador import Validador
 
 class GeneradorAutomatico:
     def __init__(self):
-        print("Inicializando el generador...")
+        # Inicializando el generador...
 
         # Estas son nuestras herramientas
         self.db = db
@@ -38,7 +38,7 @@ class GeneradorAutomatico:
 
     # Descarga los datos de Supabase antes de empezar y filtra por ciclos
     def preparar_datos_supabase(self, ciclo_filtro_id=None):
-        print("Descargando los datos necesarios de Supabase...")
+        # Descargando los datos necesarios de Supabase...
 
         # Carga los datos
         self.profesores = self.db.obtener_profesores()
@@ -46,7 +46,7 @@ class GeneradorAutomatico:
         todos_modulos = self.db.obtener_modulos()
 
         if ciclo_filtro_id:
-            print(f"Filtrando para el ciclo ID: {ciclo_filtro_id}")
+            # Filtrando para el ciclo ID: {ciclo_filtro_id}
             # Se queda solo los módulos de este ciclo
             self.modulos = [m for m in todos_modulos if m.get('ciclo_id') == ciclo_filtro_id]
         else:
@@ -72,7 +72,7 @@ class GeneradorAutomatico:
             print(f"Error intentando preparar los datos: {e} ")
             return False
         
-        print(f"Los datos se han encontrado y preparado correctamente. Asignaturas a procesor: {len(self.modulos)}")
+        # Los datos se han encontrado y preparado correctamente.
         return True
         
     # Comprueba que todo carga al ejecutarse
@@ -87,13 +87,13 @@ class GeneradorAutomatico:
         if not carga_exitosa:
             return
         
-        print("Comenzando generación automática...")
+        # Comenzando generación automática...
 
         exito = self.calcular_distribucion(ignorar_preferencias_leves=False)
 
         if not exito:
-            print("Ha habido un conflicto con preferencias personales (2).")
-            print("Reintentando teniendo en cuenta solo restricciones obligatorias (1)")
+            # Ha habido un conflicto con preferencias personales (2).
+            # Reintentando teniendo en cuenta solo restricciones obligatorias (1)
 
             # Limpia completamente para intentarlo de nuevo
             self.conflictos = []
@@ -104,18 +104,19 @@ class GeneradorAutomatico:
 
             # Ignora las preferencias leves en el 2º intento
             if self.calcular_distribucion(ignorar_preferencias_leves=True):
-                print("Horario generado exitosamente, han sido ignoradas las preferencias leves")
+                # Horario generado exitosamente, han sido ignoradas las preferencias leves
 
                 self.advertencias.append("Se han ignorado las preferencias de nivel 2, solo se tendran en cuenta las obligatorias")
            
             else:
                 print("No ha sido posible generar el horario, se han encontrado conflictos críticos")
         else:
-            print("¡Horario generado exitosamente!")
+            # ¡Horario generado exitosamente!
+            pass
 
 
     def guardar_cambios(self):
-        print("Guardando los resultados en Supabase..")
+        # Guardando los resultados en Supabase..
         
         datos_para_insertar = []
 
@@ -140,7 +141,8 @@ class GeneradorAutomatico:
         if datos_para_insertar:
             error = self.db.guardar_horario_generado(datos_para_insertar, ids_afectados)
             if not error:
-                print(f"Han sido guardadas exitosamente {len(datos_para_insertar)} clases en la base de datos.")
+                pass
+                # Han sido guardadas exitosamente {len(datos_para_insertar)} clases en la base de datos.
             else:
                 print(f"Error al guardar en la base de datos: {error}")
 

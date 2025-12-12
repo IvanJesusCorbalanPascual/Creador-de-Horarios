@@ -28,7 +28,6 @@ class GestorPreferencias:
             self.cache_preferencias = datos
 
         # "len" cuenta cuantos elementos hay en la lista
-        print(f"Se han cargado las preferencias correctamente: {len(self.cache_preferencias)}")
         
 
     def comprobar_conflicto(self, profesor_id, dia, hora_inicio, hora_fin):
