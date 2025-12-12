@@ -5,9 +5,7 @@ from supabase import create_client, Client
 URL = "https://lvcrigxkcyyeqbqfgruo.supabase.co"
 KEY = "sb_secret_b_o0X_MZDs9IWdxSs-kuHA_W5mNG5dX"   
 
-"""
-Clase que maneja todas las operaciones con la base de datos con el cliente de Supabase
-"""
+# Clase que maneja todas las operaciones con la base de datos con el cliente de Supabase
 class DBManager:
     def __init__(self):
         self.client: Client = create_client(URL, KEY)
@@ -59,7 +57,7 @@ class DBManager:
                     profe = item['profesores']
                     lista_profesores.append(profe)
             if lista_profesores:
-               print(f"DEBUG: Primer profesor cargado: {lista_profesores[0]}")
+               print("Cargando profesores...")
             return lista_profesores
         except Exception as e:
             print(f"Error obtener_profesores_por_ciclo: {e}")
