@@ -1,7 +1,8 @@
 import os
 from PyQt5 import uic
 from PyQt5.QtWidgets import (QDialog, QMessageBox, QLabel, QComboBox, QVBoxLayout, 
-                             QAbstractItemView, QTableWidgetItem, QHeaderView, QHBoxLayout, QPushButton)
+                             QAbstractItemView, QTableWidgetItem, QHeaderView, QHBoxLayout, QPushButton, QColorDialog)
+from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 from src.bd.bd_manager import db
 from src.managers.profesor_manager import ProfesorManager
@@ -21,6 +22,13 @@ class DialogoProfesor(QDialog):
             self.le_nombre.setText(profesor.nombre)
             self.sb_horas_max_dia.setValue(profesor.horas_max_dia)
             self.sb_horas_max_semana.setValue(profesor.horas_max_semana)
+            self.color_actual = profesor.color_hex
+        else:
+            # Color por defecto random si es nuevo
+            import random
+            self.color_actual = "#{:06x}".format(random.randint(0, 0xFFFFFF))
+        
+        self.actualizar_preview_color()
 
         if not self.profesor:
             self.ciclos_db = db.obtener_ciclos()
@@ -47,7 +55,22 @@ class DialogoProfesor(QDialog):
 
         self.buttonBox.accepted.connect(self.aceptar)
         self.buttonBox.rejected.connect(self.reject)
+        
+        # Conexión botón color si existe (que debería tras editar el .ui)
+        if hasattr(self, 'btn_color'):
+            self.btn_color.clicked.connect(self.seleccionar_color)
+            
         self.bloquear_señales = False
+
+    def seleccionar_color(self):
+        color = QColorDialog.getColor(QColor(self.color_actual), self, "Seleccionar Color")
+        if color.isValid():
+            self.color_actual = color.name()
+            self.actualizar_preview_color()
+
+    def actualizar_preview_color(self):
+        if hasattr(self, 'lbl_color_preview'):
+            self.lbl_color_preview.setStyleSheet(f"background-color: {self.color_actual}; border: 1px solid gray; min-width: 30px;")
 
     def aceptar(self):
         nombre = self.le_nombre.text().strip()
@@ -58,15 +81,28 @@ class DialogoProfesor(QDialog):
             QMessageBox.warning(self, "Error", "El nombre no puede estar vacio")
             return
 
+
+        # Validación de Color Único
+        todos_profesores = self.profesor_manager.get_all_profesores()
+        for p in todos_profesores:
+            # Si estamos editando, ignoramos al profesor actual
+            if self.profesor and p.id == self.profesor.id:
+                continue
+            
+            # Comparamos colores (ignorando mayúsculas/minúsculas)
+            if p.color_hex and self.color_actual and p.color_hex.lower() == self.color_actual.lower():
+                QMessageBox.warning(self, "Aviso de Color", f"El color seleccionado ya está en uso por el profesor '{p.nombre}'.\nPor favor, elige otro color para evitar confusiones.")
+                return
+
         if self.profesor:
             self.profesor.nombre = nombre
             self.profesor.horas_max_dia = h_dia
             self.profesor.horas_max_semana = h_sem
+            self.profesor.color_hex = self.color_actual
             exito = self.profesor_manager.update_profesor(self.profesor)
         else:
-            import random
-            color_random = "#{:06x}".format(random.randint(0, 0xFFFFFF))
-            nuevo_profe = Profesor(None, nombre, color_random, h_dia, h_sem)
+            # import random already imported logic handled in init
+            nuevo_profe = Profesor(None, nombre, self.color_actual, h_dia, h_sem)
             nuevo_id = self.profesor_manager.add_profesor(nuevo_profe)
             exito = nuevo_id is not None
             

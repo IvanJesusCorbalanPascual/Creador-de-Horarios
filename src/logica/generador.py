@@ -179,8 +179,18 @@ class GeneradorAutomatico:
         dias_semana = [0, 1, 2, 3, 4]
         
         # Ahora cargamos las horas DINAMICAMENTE
-        num_horas = len(self.config_manager.obtener_horas())
-        horas_lectivas = list(range(num_horas)) # [0, 1, 2, ... N-1]
+        horas_config = self.config_manager.obtener_horas()
+        
+        # Filtramos las horas que son recreo/descanso
+        # Guardamos en horas_lectivas solo los indices (0, 1, 2...) que NO son descanso
+        horas_lectivas = []
+        for i, h in enumerate(horas_config):
+            # Si es un diccionario y NO es descanso, o si es string (legacy)
+            if isinstance(h, dict):
+                if not h.get("es_descanso", False):
+                    horas_lectivas.append(i)
+            else:
+                horas_lectivas.append(i)
 
         # Ordena de mayor a menor colocando primero las asignaturas grandes
         modulos_ordenados = sorted(self.modulos, key=self.obtener_horas_para_ordenar, reverse=True)

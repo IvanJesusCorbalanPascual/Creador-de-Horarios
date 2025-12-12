@@ -77,6 +77,37 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_color">
+        <property name="text">
+         <string>Color:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_color">
+        <item>
+         <widget class="QPushButton" name="btn_color">
+          <property name="text">
+           <string>Cambiar Color 🎨</string>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lbl_color_preview">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: #ffffff; border: 1px solid gray; min-width: 30px;</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
      </layout>
     </widget>
    </item>

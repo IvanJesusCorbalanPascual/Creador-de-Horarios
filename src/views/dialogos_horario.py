@@ -16,11 +16,11 @@ class DialogoGestionHoras(QDialog):
 
         # Tabla
         self.tabla = QTableWidget()
-        self.tabla.setColumnCount(2)
-        self.tabla.setHorizontalHeaderLabels(["Hora Inicio", "Hora Fin"])
+        self.tabla.setColumnCount(3)
+        self.tabla.setHorizontalHeaderLabels(["Hora Inicio", "Hora Fin", "Recreo"])
         self.tabla.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # Establece un ancho mínimo de columna para evitar "fino"
-        self.tabla.horizontalHeader().setMinimumSectionSize(150)
+        self.tabla.horizontalHeader().setMinimumSectionSize(120)
         # Establece un alto de fila mayor para que no corte los números
         self.tabla.verticalHeader().setDefaultSectionSize(45)
         
@@ -62,14 +62,15 @@ class DialogoGestionHoras(QDialog):
         self.tabla.setRowCount(0)
         
         # Compatible con la versión antigua (si devuelve strings) o nueva (dicts)
+        # Compatible con la versión antigua (si devuelve strings) o nueva (dicts)
         for item in horas_list:
             if isinstance(item, dict):
-                self.agregar_fila_visual(item.get("inicio", "08:00:00"), item.get("fin", "09:00:00"))
+                self.agregar_fila_visual(item.get("inicio", "08:00:00"), item.get("fin", "09:00:00"), item.get("es_descanso", False))
             else:
                 fin = self.calcular_fin(item)
-                self.agregar_fila_visual(item, fin)
+                self.agregar_fila_visual(item, fin, False)
 
-    def agregar_fila_visual(self, hora_inicio_str, hora_fin_str):
+    def agregar_fila_visual(self, hora_inicio_str, hora_fin_str, es_descanso=False):
         row = self.tabla.rowCount()
         self.tabla.insertRow(row)
         
@@ -85,8 +86,16 @@ class DialogoGestionHoras(QDialog):
         time_obj_fin = QTime.fromString(hora_fin_str, "HH:mm:ss")
         te_fin.setTime(time_obj_fin)
         
+        # Checkbox para Recreo
+        item_check = QTableWidgetItem()
+        item_check.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+        item_check.setCheckState(Qt.Checked if es_descanso else Qt.Unchecked)
+        # Centrar el checkbox
+        # QTableWidgetItem no alinea el checkbox nativo fácilmente, pero funciona.
+        
         self.tabla.setCellWidget(row, 0, te_inicio)
         self.tabla.setCellWidget(row, 1, te_fin)
+        self.tabla.setItem(row, 2, item_check)
         
         # Conectamos el cambio de hora de inicio para ajustar el fin si es necesario
         te_inicio.timeChanged.connect(self.al_cambiar_inicio)
@@ -123,7 +132,7 @@ class DialogoGestionHoras(QDialog):
 
     def agregar_fila(self):
         # Añade una fila por defecto
-        self.agregar_fila_visual("08:00:00", "09:00:00")
+        self.agregar_fila_visual("08:00:00", "09:00:00", False)
 
     def eliminar_fila(self):
         row = self.tabla.currentRow()
@@ -153,13 +162,17 @@ class DialogoGestionHoras(QDialog):
                 t_ini = widget_ini.time().toString("HH:mm:ss")
                 t_fin = widget_fin.time().toString("HH:mm:ss")
                 
+                # Checkbox
+                item_chk = self.tabla.item(r, 2)
+                es_descanso = (item_chk.checkState() == Qt.Checked)
+                
                 # VALIDACIÓN: Fin debe ser > Inicio
                 if t_fin <= t_ini:
                     QMessageBox.warning(self, "Error de Validación", 
                                         f"En la fila {r+1}, la hora final ({t_fin}) debe ser mayor que la inicial ({t_ini}).")
                     return
 
-                nuevas_horas.append({"inicio": t_ini, "fin": t_fin})
+                nuevas_horas.append({"inicio": t_ini, "fin": t_fin, "es_descanso": es_descanso})
         
         # Ordenar las horas por inicio
         nuevas_horas.sort(key=lambda x: x["inicio"])

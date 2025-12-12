@@ -449,18 +449,36 @@ class MiAplicacion(QMainWindow):
             etiquetas_filas = []
             mapa_filas = {}
             mapa_filas_reverse = {} # Key: Index, Val: Hora Inicio str
+            filas_descanso = []
 
             for i, h in enumerate(horas_configuradas):
                 if isinstance(h, dict):
                     hora_str = h.get("inicio", "00:00:00")
+                    fin_str = h.get("fin", "00:00:00")
+                    label = f"{hora_str[:5]} - {fin_str[:5]}"
+                    
+                    if h.get("es_descanso"):
+                        label += " (R)"
+                        filas_descanso.append(i)
+                    
+                    etiquetas_filas.append(label)
                 else: 
                     hora_str = h # Legacy fallback
+                    etiquetas_filas.append(hora_str[:5])
                 
-                etiquetas_filas.append(hora_str[:5])
                 mapa_filas[hora_str] = i
                 mapa_filas_reverse[i] = hora_str
 
             self.tabl_horario_grid.setVerticalHeaderLabels(etiquetas_filas) 
+
+            # Pintamos filas de descanso
+            for f_idx in filas_descanso:
+                for c_idx in range(self.tabl_horario_grid.columnCount()):
+                    # Creamos item vacio para poder pintarlo y bloquearlo
+                    item_gris = QTableWidgetItem("") 
+                    item_gris.setBackground(QColor("#e0e0e0")) 
+                    item_gris.setFlags(Qt.NoItemFlags) 
+                    self.tabl_horario_grid.setItem(f_idx, c_idx, item_gris) 
 
             for clase in datos:
 

@@ -2,27 +2,38 @@
     "horas": [
         {
             "inicio": "08:00:00",
-            "fin": "09:00:00"
+            "fin": "09:00:00",
+            "es_descanso": false
         },
         {
             "inicio": "09:00:00",
-            "fin": "15:00:00"
+            "fin": "10:00:00",
+            "es_descanso": false
         },
         {
             "inicio": "10:00:00",
-            "fin": "11:00:00"
+            "fin": "11:00:00",
+            "es_descanso": false
         },
         {
             "inicio": "11:30:00",
-            "fin": "12:00:00"
+            "fin": "12:00:00",
+            "es_descanso": true
         },
         {
             "inicio": "12:00:00",
-            "fin": "13:00:00"
+            "fin": "13:00:00",
+            "es_descanso": false
         },
         {
             "inicio": "13:00:00",
-            "fin": "14:00:00"
+            "fin": "14:00:00",
+            "es_descanso": false
+        },
+        {
+            "inicio": "14:00:00",
+            "fin": "15:00:00",
+            "es_descanso": false
         }
     ]
 }
