@@ -721,9 +721,19 @@ class MiAplicacion(QMainWindow):
         fila_destino, col_destino = indice_destino.row(), indice_destino.column()
 
         # Si lo sueltas en el mismo sitio donde ya estaba, no hace nada y lo ignora
+        # Si lo sueltas en el mismo sitio donde ya estaba, no hace nada y lo ignora
         if fila_origen == fila_destino and col_origen == col_destino:
             event.ignore()
             return
+            
+        # COMPROBACION RECREO
+        horas_config = self.config_manager.obtener_horas()
+        if 0 <= fila_destino < len(horas_config):
+            hora_dest = horas_config[fila_destino]
+            if isinstance(hora_dest, dict) and hora_dest.get("es_descanso", False):
+                QMessageBox.warning(self, "Acción no permitida", "No puedes colocar una clase en horas de recreo/descanso.")
+                event.ignore()
+                return
         
         # Recupera el ID del profesor que se guarda en cargar_horario
         profesor_id = item_origen.data(Qt.UserRole + 1)
